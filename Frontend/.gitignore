@@ -22,3 +22,7 @@ dist-ssr
 *.njsproj
 *.sln
 *.sw?
+
+# Hackathon documentation
+campusmate.ai hackathon writeup.md
+
