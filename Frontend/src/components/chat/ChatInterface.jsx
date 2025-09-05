@@ -103,39 +103,42 @@ const ChatInterface = () => {
   };
 
   const tabs = [
-    { id: "chat", label: "Information Chat", icon: MessageSquare },
-    { id: "help", label: "Help Requests", icon: HelpCircle },
-    { id: "leaderboard", label: "Volunteer Leaderboard", icon: Trophy },
+    { id: "chat", label: "Chat", icon: MessageSquare },
+    { id: "help", label: "Help", icon: HelpCircle },
+    { id: "leaderboard", label: "Leaderboard", icon: Trophy },
   ];
 
   return (
     <div className="min-h-screen bg-gray-950 flex flex-col relative">
       {/* Header with Navigation */}
-      <header className="bg-gray-900/80 backdrop-blur-md border-b border-gray-800 sticky top-0 z-40">
-        <div className="max-w-6xl mx-auto px-4 sm:px-6 lg:px-8">
-          <div className="flex items-center justify-between h-16">
-            {/* Logo - Just Icon */}
+      <header className="bg-gray-950/95 backdrop-blur-xl border-b border-gray-800/50 sticky top-0 z-40">
+        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+          <div className="flex items-center justify-between h-14">
+            {/* Logo */}
             <div
-              className="flex items-center cursor-pointer"
+              className="flex items-center cursor-pointer group"
               onClick={() => navigate("/")}
             >
-              <div className="w-10 h-10 bg-gradient-to-r from-orange-500 to-orange-600 rounded-xl flex items-center justify-center">
-                <Bot className="w-6 h-6 text-white" />
+              <div className="w-9 h-9 bg-gradient-to-br from-orange-500 to-orange-600 rounded-xl flex items-center justify-center shadow-lg group-hover:shadow-orange-500/25 transition-all duration-300">
+                <Bot className="w-5 h-5 text-white" />
               </div>
+              <span className="ml-3 text-xl font-bold text-white tracking-tight hidden sm:block">
+                CampusMate<span className="font-light text-orange-400">.ai</span>
+              </span>
             </div>
 
-            {/* Desktop Navigation Tabs */}
-            <div className="hidden md:flex items-center space-x-1">
+            {/* Desktop Navigation Tabs - Centered */}
+            <div className="hidden md:flex items-center bg-gray-900/60 backdrop-blur-md rounded-xl p-1 border border-gray-700/50 gap-1">
               {tabs.map((tab) => {
                 const Icon = tab.icon;
                 return (
                   <button
                     key={tab.id}
                     onClick={() => setActiveTab(tab.id)}
-                    className={`relative px-4 py-2 rounded-lg text-sm font-medium transition-all duration-200 flex items-center space-x-2 ${
+                    className={`relative px-4 py-2 rounded-lg text-sm font-medium transition-all duration-300 flex items-center space-x-2 min-w-[100px] justify-center ${
                       activeTab === tab.id
-                        ? "bg-orange-600 text-white"
-                        : "text-gray-300 hover:text-white hover:bg-gray-700"
+                        ? "bg-orange-600 text-white shadow-lg shadow-orange-600/30"
+                        : "text-gray-300 hover:text-white hover:bg-gray-700/60"
                     }`}
                   >
                     <Icon className="w-4 h-4" />
@@ -145,50 +148,50 @@ const ChatInterface = () => {
               })}
             </div>
 
-            {/* Right Side - University Notices & User Profile */}
-            <div className="flex items-center space-x-3">
+            {/* Right Side - Actions */}
+            <div className="flex items-center space-x-2">
               {/* University Notices Button */}
               <button
                 onClick={() => setIsNoticePanelOpen(!isNoticePanelOpen)}
-                className={`hidden sm:flex items-center space-x-2 px-3 py-2 rounded-lg transition-all duration-200 ${
+                className={`hidden sm:flex items-center space-x-2 px-3 py-2 h-10 rounded-xl transition-all duration-300 ${
                   isNoticePanelOpen
-                    ? "bg-orange-600 text-white"
-                    : "text-gray-300 hover:text-white hover:bg-gray-700"
+                    ? "bg-orange-600 text-white shadow-lg shadow-orange-600/30"
+                    : "text-gray-300 hover:text-white hover:bg-gray-800/60 border border-gray-700/50"
                 }`}
               >
                 <Bell className="w-4 h-4" />
-                <span className="text-sm font-medium">University Notices</span>
+                <span className="text-sm font-medium">Notices</span>
               </button>
 
               {/* Mobile Notices Button */}
               <button
                 onClick={() => setIsNoticePanelOpen(!isNoticePanelOpen)}
-                className={`sm:hidden p-2 rounded-lg transition-all duration-200 ${
+                className={`sm:hidden p-2 h-10 w-10 rounded-xl transition-all duration-300 flex items-center justify-center ${
                   isNoticePanelOpen
-                    ? "bg-orange-600 text-white"
-                    : "text-gray-300 hover:text-white hover:bg-gray-700"
+                    ? "bg-orange-600 text-white shadow-lg shadow-orange-600/30"
+                    : "text-gray-300 hover:text-white hover:bg-gray-800/60 border border-gray-700/50"
                 }`}
               >
-                <Bell className="w-5 h-5" />
+                <Bell className="w-4 h-4" />
               </button>
 
               {/* User Profile */}
-              <div className="flex items-center space-x-2 cursor-pointer p-2 rounded-lg hover:bg-gray-700 transition-colors">
-                <div className="w-8 h-8 bg-gradient-to-r from-blue-500 to-purple-600 rounded-full flex items-center justify-center">
-                  <User className="w-4 h-4 text-white" />
+              <div className="flex items-center space-x-2 cursor-pointer px-3 py-2 h-10 rounded-xl hover:bg-gray-800/60 transition-all duration-300 border border-gray-700/50 hover:border-gray-600/50">
+                <div className="w-6 h-6 bg-gradient-to-br from-blue-500 to-purple-600 rounded-lg flex items-center justify-center shadow-lg">
+                  <User className="w-3 h-3 text-white" />
                 </div>
-                <span className="hidden sm:block text-sm text-gray-300">Profile</span>
+                <span className="hidden sm:block text-sm text-gray-300 font-medium">Profile</span>
               </div>
 
               {/* Mobile Menu Button */}
               <button
                 onClick={() => setIsMobileMenuOpen(!isMobileMenuOpen)}
-                className="md:hidden p-2 rounded-lg text-gray-300 hover:text-white hover:bg-gray-700 transition-all duration-200"
+                className="md:hidden p-2 h-10 w-10 rounded-xl text-gray-300 hover:text-white hover:bg-gray-800/60 transition-all duration-300 border border-gray-700/50 flex items-center justify-center"
               >
                 {isMobileMenuOpen ? (
-                  <X className="w-5 h-5" />
+                  <X className="w-4 h-4" />
                 ) : (
-                  <Menu className="w-5 h-5" />
+                  <Menu className="w-4 h-4" />
                 )}
               </button>
             </div>
@@ -201,7 +204,7 @@ const ChatInterface = () => {
                 initial={{ opacity: 0, height: 0 }}
                 animate={{ opacity: 1, height: "auto" }}
                 exit={{ opacity: 0, height: 0 }}
-                className="md:hidden py-4 border-t border-gray-700"
+                className="md:hidden py-3 border-t border-gray-800/50"
               >
                 <div className="flex flex-col space-y-2">
                   {tabs.map((tab) => {
@@ -213,10 +216,10 @@ const ChatInterface = () => {
                           setActiveTab(tab.id);
                           setIsMobileMenuOpen(false);
                         }}
-                        className={`flex items-center space-x-3 px-4 py-3 rounded-lg text-sm font-medium transition-all duration-200 ${
+                        className={`flex items-center space-x-3 px-4 py-3 rounded-xl text-sm font-medium transition-all duration-300 ${
                           activeTab === tab.id
-                            ? "bg-orange-600 text-white"
-                            : "text-gray-300 hover:text-white hover:bg-gray-700"
+                            ? "bg-orange-600 text-white shadow-lg shadow-orange-600/30"
+                            : "text-gray-300 hover:text-white hover:bg-gray-800/60 border border-gray-700/50"
                         }`}
                       >
                         <Icon className="w-4 h-4" />
@@ -232,20 +235,21 @@ const ChatInterface = () => {
       </header>
 
       {/* Main Content */}
-      <div className="flex-1 flex overflow-hidden">
+      <div className="flex-1 flex overflow-hidden pb-24">
         {/* Main Chat Area */}
         <div className="flex-1 flex flex-col">
           {/* Tab Content */}
           <div className="flex-1 overflow-hidden max-w-4xl mx-auto w-full">
             {activeTab === "chat" && (
-              <div className="h-full flex flex-col relative">
+              <div className="h-full flex flex-col">
                 {/* Messages Area */}
                 <div
                   ref={chatContainerRef}
-                  className="flex-1 overflow-y-auto p-4 md:p-6 pb-24 space-y-4 bg-gray-950"
+                  className="flex-1 overflow-y-auto p-4 md:p-6 space-y-4 bg-gray-950"
                   style={{
                     scrollbarWidth: "thin",
                     scrollbarColor: "#374151 transparent",
+                    paddingBottom: "2rem",
                   }}
                 >
                   {messages.map((message) => (
@@ -289,7 +293,7 @@ const ChatInterface = () => {
 
                         {/* Message Content */}
                         <div
-                          className={`rounded-2xl px-4 py-3 ${
+                          className={`rounded-2xl px-4 py-3 max-w-full break-words ${
                             message.type === "user"
                               ? "bg-orange-600 text-white"
                               : "bg-gray-800 text-gray-100"
@@ -300,7 +304,7 @@ const ChatInterface = () => {
                               {message.content}
                             </TextShimmerWave>
                           ) : (
-                            <p className="text-sm">{message.content}</p>
+                            <p className="text-sm whitespace-pre-wrap break-words overflow-wrap-anywhere">{message.content}</p>
                           )}
                           <div
                             className={`text-xs mt-1 opacity-70 ${
@@ -318,30 +322,32 @@ const ChatInterface = () => {
                   <div ref={messagesEndRef} />
                 </div>
 
-                {/* Floating Input Area */}
-                <div className="absolute bottom-0 left-0 right-0 p-4 md:p-6">
-                  <form
-                    onSubmit={handleSendMessage}
-                    className="max-w-3xl mx-auto"
-                  >
-                    <div className="relative bg-gray-900/90 backdrop-blur-lg border border-gray-700 rounded-2xl shadow-2xl">
-                      <input
-                        type="text"
-                        value={inputMessage}
-                        onChange={(e) => setInputMessage(e.target.value)}
-                        placeholder="Ask me anything about the university..."
-                        disabled={isLoading}
-                        className="w-full bg-transparent px-6 py-4 pr-14 text-white placeholder-gray-400 focus:outline-none transition-all duration-200 disabled:opacity-50 rounded-2xl"
-                      />
-                      <button
-                        type="submit"
-                        disabled={!inputMessage.trim() || isLoading}
-                        className="absolute right-2 top-1/2 transform -translate-y-1/2 bg-orange-600 hover:bg-orange-700 disabled:bg-gray-600 disabled:cursor-not-allowed text-white p-2.5 rounded-xl transition-all duration-200"
-                      >
-                        <Send className="w-4 h-4" />
-                      </button>
-                    </div>
-                  </form>
+                {/* Fixed Floating Input Area */}
+                <div className="fixed bottom-0 left-0 right-0 z-30 bg-gradient-to-t from-gray-950 via-gray-950/95 to-transparent p-4 md:p-6 pt-8">
+                  <div className="max-w-4xl mx-auto">
+                    <form
+                      onSubmit={handleSendMessage}
+                      className="max-w-3xl mx-auto"
+                    >
+                      <div className="relative bg-gray-900/90 backdrop-blur-xl border border-gray-700/70 rounded-2xl shadow-2xl hover:shadow-orange-500/5 transition-all duration-300">
+                        <input
+                          type="text"
+                          value={inputMessage}
+                          onChange={(e) => setInputMessage(e.target.value)}
+                          placeholder="Ask me anything about the university..."
+                          disabled={isLoading}
+                          className="w-full bg-transparent px-6 py-4 pr-14 text-white placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-orange-500/30 transition-all duration-200 disabled:opacity-50 rounded-2xl"
+                        />
+                        <button
+                          type="submit"
+                          disabled={!inputMessage.trim() || isLoading}
+                          className="absolute right-2 top-1/2 transform -translate-y-1/2 bg-orange-600 hover:bg-orange-700 disabled:bg-gray-600 disabled:cursor-not-allowed text-white p-2.5 rounded-xl transition-all duration-200 hover:scale-105 active:scale-95"
+                        >
+                          <Send className="w-4 h-4" />
+                        </button>
+                      </div>
+                    </form>
+                  </div>
                 </div>
               </div>
             )}
