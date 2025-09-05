@@ -115,16 +115,9 @@ const noticeSchema = new mongoose.Schema({
       default: false
     },
     
-    // Year/Level targeting (extracted from student ID or profile)
-    academicYears: [{
-      type: String,
-      enum: ['1st', '2nd', '3rd', '4th', 'Masters', 'PhD', 'all']
-    }],
-    
     // Session targeting (for students)
     sessions: [{
       type: String,
-      enum: ['2024-25', '2023-24', '2022-23', '2021-22', '2020-21', '2019-20', '2018-19', '2017-18']
     }],
     
     // Gender targeting (if needed for specific notices)
@@ -408,18 +401,18 @@ noticeSchema.statics.findForUser = function(user, options = {}) {
     });
 };
 
-// Middleware to auto-expire notices
-noticeSchema.pre('find', function() {
-  this.updateMany(
-    { 
-      status: 'Published',
-      'deliverySettings.expiresAt': { $lt: new Date() }
-    },
-    { 
-      status: 'Expired'
-    }
-  );
-});
+// // Middleware to auto-expire notices
+// noticeSchema.pre('find', function() {
+//   this.updateMany(
+//     { 
+//       status: 'Published',
+//       'deliverySettings.expiresAt': { $lt: new Date() }
+//     },
+//     { 
+//       status: 'Expired'
+//     }
+//   );
+// });
 
 noticeSchema.pre('findOne', function() {
   this.updateOne(

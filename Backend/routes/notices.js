@@ -2,6 +2,7 @@ const express = require('express');
 const { body } = require('express-validator');
 const { protect, authorize } = require('../middleware/auth');
 const { validate } = require('../middleware/validation');
+const { uploadNoticeAttachments, handleUploadError } = require('../utils/fileUpload');
 
 // Notice controller functions
 const {
@@ -12,7 +13,10 @@ const {
   deleteNotice,
   markAsRead,
   getNoticesForUser,
-  getNoticeAnalytics
+  getNoticeAnalytics,
+  removeAttachment,
+  getNoticeCategories,
+  getNoticeStats
 } = require('../controllers/notice');
 
 const router = express.Router();
@@ -85,19 +89,23 @@ router.use(protect);
 // User routes
 router.get('/my-notices', getNoticesForUser); // Get notices targeted to current user
 router.put('/:id/read', markAsRead); // Mark notice as read
+router.get('/categories', getNoticeCategories); // Get notice categories (accessible to all authenticated users)
 
 // Admin-only routes (only admins can manage notices)
 router.use(authorize('admin'));
 
+router.get('/stats', getNoticeStats); // Get notice statistics
+
 router.route('/')
   .get(getNotices) // Get all notices (admin view)
-  .post(noticeValidation, validate, createNotice); // Create new notice
+  .post(uploadNoticeAttachments, handleUploadError, noticeValidation, validate, createNotice); // Create new notice with file upload
 
 router.route('/:id')
   .get(getNotice) // Get specific notice
-  .put(noticeValidation, validate, updateNotice) // Update notice
+  .put(uploadNoticeAttachments, handleUploadError, noticeValidation, validate, updateNotice) // Update notice with optional new files
   .delete(deleteNotice); // Delete notice
 
 router.get('/:id/analytics', getNoticeAnalytics); // Get notice analytics
+router.delete('/:id/attachments/:attachmentId', removeAttachment); // Remove specific attachment
 
 module.exports = router;

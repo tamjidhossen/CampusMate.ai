@@ -75,7 +75,7 @@ exports.updateMyProfile = asyncHandler(async (req, res, next) => {
   const fieldsToUpdate = {
     name: req.body.name,
     phone: req.body.phone,
-    session: req.body.session?req.body.session:null,
+    department: req.body.department,
     residence: req.body.residence,
     bloodGroup: req.body.bloodGroup,
     isVolunteer: req.body.isVolunteer
@@ -172,60 +172,93 @@ exports.deleteProfilePicture = asyncHandler(async (req, res, next) => {
 // @access  Private
 exports.getPersonalizedNotices = asyncHandler(async (req, res, next) => {
   const user = await User.findById(req.user.id);
-  
+  console.log(user);
   if (!user) {
     return next(new ErrorResponse('User not found', 404));
   }
 
   // Build query to find notices targeted to this user
-  const query = {
-    status: 'Published',
-    $or: [
-      // Notices targeting this specific user
-      { 'targeting.specificUsers': user._id },
-      // Notices targeting user's department (if not excluded)
-      {
-        'targeting.departments': user.department,
-        'targeting.excludeUsers': { $ne: user._id }
-      },
-      // Notices targeting user's role (if not excluded)
-      {
-        'targeting.roles': user.role,
-        'targeting.excludeUsers': { $ne: user._id }
-      },
-      // Notices targeting user's blood group (if not excluded)
-      {
-        'targeting.bloodGroups': user.bloodGroup,
-        'targeting.excludeUsers': { $ne: user._id }
-      },
-      // Notices targeting volunteers only (if user is volunteer and not excluded)
-      {
-        'targeting.volunteersOnly': true,
-        isVolunteer: true,
-        'targeting.excludeUsers': { $ne: user._id }
-      },
-      // Notices targeting user's session (for students)
-      ...(user.session ? [{
-        'targeting.sessions': user.session,
-        'targeting.excludeUsers': { $ne: user._id }
-      }] : []),
-      // Notices targeting user's residence (keyword matching)
-      ...(user.residence ? [{
-        'targeting.residenceKeywords': { 
-          $elemMatch: { 
-            $regex: new RegExp(user.residence, 'i') 
-          } 
-        },
-        'targeting.excludeUsers': { $ne: user._id }
-      }] : [])
-    ],
-    // Only show notices that haven't expired
-    $or: [
-      { 'deliverySettings.expiresAt': { $exists: false } },
-      { 'deliverySettings.expiresAt': null },
-      { 'deliverySettings.expiresAt': { $gt: new Date() } }
-    ]
-  };
+ const query = {
+  status: 'Published',
+  'deliverySettings.publishAt': { $lte: new Date() },
+  $and: [
+    // Specific user inclusion or empty
+    {
+      $or: [
+        { 'targeting.specificUsers': user._id },
+        { 'targeting.specificUsers': { $exists: true, $size: 0 } },
+      ]
+    },
+
+    // Exclude user if in excludeUsers
+    { 'targeting.excludeUsers': { $ne: user._id } },
+
+    // Department targeting
+    {
+      $or: [
+        { 'targeting.departments': user.department },
+        { 'targeting.departments': { $exists: true, $size: 0 } },
+        { 'targeting.departments': 'all' }
+      ]
+    },
+
+    // Role targeting
+    {
+      $or: [
+        { 'targeting.roles': user.role },
+        { 'targeting.roles': { $exists: true, $size: 0 } },
+        { 'targeting.roles': 'all' }
+      ]
+    },
+
+    // Blood group targeting
+    {
+      $or: [
+        { 'targeting.bloodGroups': user.bloodGroup },
+        { 'targeting.bloodGroups': { $exists: true, $size: 0 } },
+        { 'targeting.bloodGroups': 'all' }
+      ]
+    },
+
+    // Volunteer targeting
+    ...(user.isVolunteer
+      ? [{ $or: [{ 'targeting.volunteersOnly': true }, { 'targeting.volunteersOnly': false }, { 'targeting.volunteersOnly': { $exists: false } }] }]
+      : [{ 'targeting.volunteersOnly': { $ne: true } }]
+    ),
+
+    // Session targeting
+    ...(user.session
+      ? [{
+          $or: [
+            { 'targeting.sessions': user.session },
+            { 'targeting.sessions': { $exists: true, $size: 0 } }
+          ]
+        }]
+      : []
+    ),
+
+    // Residence keyword targeting
+    ...(user.residence
+      ? [{
+          $or: [
+            { 'targeting.residenceKeywords': { $elemMatch: { $regex: new RegExp(user.residence, 'i') } } },
+            { 'targeting.residenceKeywords': { $exists: true, $size: 0 } }
+          ]
+        }]
+      : []
+    ),
+
+    // Expiry check
+    {
+      $or: [
+        { 'deliverySettings.expiresAt': { $exists: false } },
+        { 'deliverySettings.expiresAt': null },
+        { 'deliverySettings.expiresAt': { $gt: new Date() } }
+      ]
+    }
+  ]
+};
+
 
   // Parse query parameters
   const page = parseInt(req.query.page, 10) || 1;
@@ -244,6 +277,7 @@ exports.getPersonalizedNotices = asyncHandler(async (req, res, next) => {
     query.priority = priority;
   }
 
+  console.log(query);
   // Exclude already read notices unless specifically requested
   if (!includeRead) {
     query['readBy.user'] = { $ne: user._id };
@@ -258,10 +292,10 @@ exports.getPersonalizedNotices = asyncHandler(async (req, res, next) => {
     .sort({ 'deliverySettings.publishAt': -1, createdAt: -1 })
     .limit(limit)
     .skip(startIndex);
-
+  console.log(notices);
   // Get total count
   const total = await Notice.countDocuments(query);
-
+  console.log(total);
   // Calculate pagination
   const pagination = {};
   if (startIndex + limit < total) {
