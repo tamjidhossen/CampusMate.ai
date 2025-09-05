@@ -112,33 +112,50 @@ const NoticePanel = ({ isOpen, onClose }) => {
   return (
     <AnimatePresence>
       {isOpen && (
-        <motion.div
-          initial={{ x: "100%" }}
-          animate={{ x: 0 }}
-          exit={{ x: "100%" }}
-          transition={{ type: "spring", damping: 25, stiffness: 300 }}
-          className="fixed right-0 top-16 bottom-0 w-80 bg-gray-800 border-l border-gray-700 z-30 lg:relative lg:top-0 lg:w-80 lg:flex-shrink-0"
-        >
-          {/* Header */}
-          <div className="flex items-center justify-between p-4 border-b border-gray-700">
-            <div className="flex items-center space-x-2">
-              <div className="w-6 h-6 bg-orange-600 rounded-lg flex items-center justify-center">
-                <AlertCircle className="w-4 h-4 text-white" />
+        <>
+          {/* Backdrop */}
+          <motion.div
+            initial={{ opacity: 0 }}
+            animate={{ opacity: 1 }}
+            exit={{ opacity: 0 }}
+            onClick={onClose}
+            className="fixed inset-0 bg-black/40 backdrop-blur-sm z-40"
+          />
+          
+          {/* Notice Panel */}
+          <motion.div
+            initial={{ x: "100%" }}
+            animate={{ x: 0 }}
+            exit={{ x: "100%" }}
+            transition={{ type: "spring", damping: 25, stiffness: 300 }}
+            className="fixed right-0 top-0 bottom-0 w-80 sm:w-96 bg-gray-900/80 backdrop-blur-xl border-l border-gray-700/50 z-50 flex flex-col"
+          >
+            {/* Header */}
+            <div className="flex items-center justify-between p-4 border-b border-gray-700/50 bg-gray-900/50">
+              <div className="flex items-center space-x-2">
+                <div className="w-6 h-6 bg-orange-600 rounded-lg flex items-center justify-center">
+                  <AlertCircle className="w-4 h-4 text-white" />
+                </div>
+                <h2 className="text-lg font-semibold text-white">
+                  University Notices
+                </h2>
               </div>
-              <h2 className="text-lg font-semibold text-white">
-                University Notices
-              </h2>
+              <button
+                onClick={onClose}
+                className="p-1.5 rounded-lg text-gray-400 hover:text-white hover:bg-gray-700/50 transition-all duration-200"
+              >
+                <X className="w-5 h-5" />
+              </button>
             </div>
-            <button
-              onClick={onClose}
-              className="lg:hidden p-1.5 rounded-lg text-gray-400 hover:text-white hover:bg-gray-700 transition-all duration-200"
-            >
-              <X className="w-5 h-5" />
-            </button>
-          </div>
 
-          {/* Notices List */}
-          <div className="flex-1 overflow-y-auto p-4 space-y-3">
+            {/* Notices List - Fixed Height with Scroll */}
+            <div 
+              className="flex-1 overflow-y-auto p-4 space-y-3"
+              style={{
+                scrollbarWidth: "thin",
+                scrollbarColor: "#374151 transparent",
+              }}
+            >
             {sortedNotices.length === 0 ? (
               <div className="text-center py-8">
                 <div className="w-12 h-12 bg-gray-700 rounded-full flex items-center justify-center mx-auto mb-3">
@@ -148,14 +165,12 @@ const NoticePanel = ({ isOpen, onClose }) => {
               </div>
             ) : (
               sortedNotices.map((notice) => (
-                <motion.div
+                                <motion.div
                   key={notice.id}
                   initial={{ opacity: 0, y: 20 }}
                   animate={{ opacity: 1, y: 0 }}
-                  className={`relative bg-gray-900 border rounded-xl p-4 transition-all duration-200 hover:border-gray-600 ${
-                    notice.isRead
-                      ? "border-gray-700"
-                      : "border-orange-500/30 bg-orange-500/5"
+                  className={`relative bg-gray-800/80 backdrop-blur-sm border rounded-xl p-4 transition-all duration-200 hover:border-gray-600 hover:bg-gray-800/90 ${
+                    notice.isRead ? "border-gray-700/50" : "border-orange-500/30 bg-orange-500/5"
                   }`}
                 >
                   {/* Unread indicator */}
@@ -209,15 +224,16 @@ const NoticePanel = ({ isOpen, onClose }) => {
                 </motion.div>
               ))
             )}
-          </div>
+            </div>
 
-          {/* Footer */}
-          <div className="p-4 border-t border-gray-700">
-            <button className="w-full text-center text-sm text-gray-400 hover:text-white transition-colors">
-              View All Notices
-            </button>
-          </div>
-        </motion.div>
+            {/* Footer */}
+            <div className="p-4 border-t border-gray-700/50 bg-gray-900/50">
+              <button className="w-full text-center text-sm text-gray-400 hover:text-white transition-colors">
+                View All Notices
+              </button>
+            </div>
+          </motion.div>
+        </>
       )}
     </AnimatePresence>
   );

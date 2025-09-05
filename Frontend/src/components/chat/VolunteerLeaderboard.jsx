@@ -193,9 +193,9 @@ const VolunteerLeaderboard = () => {
   };
 
   return (
-    <div className="h-full flex flex-col bg-gray-950/30">
+    <div className="h-full flex flex-col bg-gray-950 max-w-5xl mx-auto">
       {/* Header */}
-      <div className="p-6 border-b border-gray-700">
+      <div className="p-6 border-b border-gray-800">
         <div className="flex items-center justify-between mb-4">
           <div>
             <h1 className="text-2xl font-bold text-white">
@@ -235,7 +235,13 @@ const VolunteerLeaderboard = () => {
       </div>
 
       {/* Leaderboard */}
-      <div className="flex-1 overflow-y-auto p-6">
+      <div 
+        className="flex-1 overflow-y-auto p-6"
+        style={{
+          scrollbarWidth: "thin",
+          scrollbarColor: "#374151 transparent",
+        }}
+      >
         <div className="space-y-3">
           {volunteers.map((volunteer, index) => {
             const rank = index + 1;

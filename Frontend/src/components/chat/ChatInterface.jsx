@@ -6,7 +6,6 @@ import {
   Bot,
   User,
   Bell,
-  BellOff,
   MessageSquare,
   HelpCircle,
   Trophy,
@@ -110,23 +109,19 @@ const ChatInterface = () => {
   ];
 
   return (
-    <div className="min-h-screen bg-gray-900 flex flex-col">
+    <div className="min-h-screen bg-gray-950 flex flex-col relative">
       {/* Header with Navigation */}
-      <header className="bg-gray-800/50 backdrop-blur-sm border-b border-gray-700 sticky top-0 z-40">
-        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+      <header className="bg-gray-900/80 backdrop-blur-md border-b border-gray-800 sticky top-0 z-40">
+        <div className="max-w-6xl mx-auto px-4 sm:px-6 lg:px-8">
           <div className="flex items-center justify-between h-16">
-            {/* Logo */}
+            {/* Logo - Just Icon */}
             <div
-              className="flex items-center space-x-3 cursor-pointer"
+              className="flex items-center cursor-pointer"
               onClick={() => navigate("/")}
             >
               <div className="w-10 h-10 bg-gradient-to-r from-orange-500 to-orange-600 rounded-xl flex items-center justify-center">
                 <Bot className="w-6 h-6 text-white" />
               </div>
-              <span className="text-xl font-bold text-white tracking-tight">
-                CampusMate
-                <span className="font-light text-orange-400">.ai</span>
-              </span>
             </div>
 
             {/* Desktop Navigation Tabs */}
@@ -150,22 +145,40 @@ const ChatInterface = () => {
               })}
             </div>
 
-            {/* Notice Panel Toggle & Mobile Menu */}
+            {/* Right Side - University Notices & User Profile */}
             <div className="flex items-center space-x-3">
+              {/* University Notices Button */}
               <button
                 onClick={() => setIsNoticePanelOpen(!isNoticePanelOpen)}
-                className={`p-2 rounded-lg transition-all duration-200 ${
+                className={`hidden sm:flex items-center space-x-2 px-3 py-2 rounded-lg transition-all duration-200 ${
                   isNoticePanelOpen
                     ? "bg-orange-600 text-white"
                     : "text-gray-300 hover:text-white hover:bg-gray-700"
                 }`}
               >
-                {isNoticePanelOpen ? (
-                  <BellOff className="w-5 h-5" />
-                ) : (
-                  <Bell className="w-5 h-5" />
-                )}
+                <Bell className="w-4 h-4" />
+                <span className="text-sm font-medium">University Notices</span>
               </button>
+
+              {/* Mobile Notices Button */}
+              <button
+                onClick={() => setIsNoticePanelOpen(!isNoticePanelOpen)}
+                className={`sm:hidden p-2 rounded-lg transition-all duration-200 ${
+                  isNoticePanelOpen
+                    ? "bg-orange-600 text-white"
+                    : "text-gray-300 hover:text-white hover:bg-gray-700"
+                }`}
+              >
+                <Bell className="w-5 h-5" />
+              </button>
+
+              {/* User Profile */}
+              <div className="flex items-center space-x-2 cursor-pointer p-2 rounded-lg hover:bg-gray-700 transition-colors">
+                <div className="w-8 h-8 bg-gradient-to-r from-blue-500 to-purple-600 rounded-full flex items-center justify-center">
+                  <User className="w-4 h-4 text-white" />
+                </div>
+                <span className="hidden sm:block text-sm text-gray-300">Profile</span>
+              </div>
 
               {/* Mobile Menu Button */}
               <button
@@ -221,19 +234,15 @@ const ChatInterface = () => {
       {/* Main Content */}
       <div className="flex-1 flex overflow-hidden">
         {/* Main Chat Area */}
-        <div
-          className={`flex-1 flex flex-col transition-all duration-300 ${
-            isNoticePanelOpen ? "lg:mr-80" : ""
-          }`}
-        >
+        <div className="flex-1 flex flex-col">
           {/* Tab Content */}
-          <div className="flex-1 overflow-hidden">
+          <div className="flex-1 overflow-hidden max-w-4xl mx-auto w-full">
             {activeTab === "chat" && (
-              <div className="h-full flex flex-col">
+              <div className="h-full flex flex-col relative">
                 {/* Messages Area */}
                 <div
                   ref={chatContainerRef}
-                  className="flex-1 overflow-y-auto p-4 space-y-4 bg-gray-950/30"
+                  className="flex-1 overflow-y-auto p-4 md:p-6 pb-24 space-y-4 bg-gray-950"
                   style={{
                     scrollbarWidth: "thin",
                     scrollbarColor: "#374151 transparent",
@@ -251,7 +260,7 @@ const ChatInterface = () => {
                       }`}
                     >
                       <div
-                        className={`flex max-w-[80%] ${
+                        className={`flex max-w-[85%] sm:max-w-[80%] ${
                           message.type === "user"
                             ? "flex-row-reverse"
                             : "flex-row"
@@ -309,20 +318,20 @@ const ChatInterface = () => {
                   <div ref={messagesEndRef} />
                 </div>
 
-                {/* Input Area */}
-                <div className="p-4 bg-gray-900/50 backdrop-blur-sm border-t border-gray-700">
+                {/* Floating Input Area */}
+                <div className="absolute bottom-0 left-0 right-0 p-4 md:p-6">
                   <form
                     onSubmit={handleSendMessage}
-                    className="max-w-4xl mx-auto"
+                    className="max-w-3xl mx-auto"
                   >
-                    <div className="relative">
+                    <div className="relative bg-gray-900/90 backdrop-blur-lg border border-gray-700 rounded-2xl shadow-2xl">
                       <input
                         type="text"
                         value={inputMessage}
                         onChange={(e) => setInputMessage(e.target.value)}
                         placeholder="Ask me anything about the university..."
                         disabled={isLoading}
-                        className="w-full bg-gray-800/80 border border-gray-600 rounded-2xl px-6 py-4 pr-14 text-white placeholder-gray-400 focus:outline-none focus:border-orange-500 focus:bg-gray-800 transition-all duration-200 disabled:opacity-50"
+                        className="w-full bg-transparent px-6 py-4 pr-14 text-white placeholder-gray-400 focus:outline-none transition-all duration-200 disabled:opacity-50 rounded-2xl"
                       />
                       <button
                         type="submit"

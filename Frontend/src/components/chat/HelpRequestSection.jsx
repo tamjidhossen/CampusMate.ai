@@ -262,9 +262,9 @@ const HelpRequestSection = () => {
   );
 
   return (
-    <div className="h-full flex flex-col bg-gray-950/30">
+    <div className="h-full flex flex-col bg-gray-950 max-w-5xl mx-auto">
       {/* Header */}
-      <div className="p-6 border-b border-gray-700">
+      <div className="p-6 border-b border-gray-800">
         <div className="flex items-center justify-between mb-4">
           <div>
             <h1 className="text-2xl font-bold text-white">Help Requests</h1>
@@ -307,7 +307,13 @@ const HelpRequestSection = () => {
       </div>
 
       {/* Help Requests List */}
-      <div className="flex-1 overflow-y-auto p-6 space-y-4">
+      <div 
+        className="flex-1 overflow-y-auto p-6 space-y-4"
+        style={{
+          scrollbarWidth: "thin",
+          scrollbarColor: "#374151 transparent",
+        }}
+      >
         {sortedRequests.map((request) => (
           <motion.div
             key={request.id}
