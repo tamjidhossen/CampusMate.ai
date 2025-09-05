@@ -414,17 +414,8 @@ noticeSchema.statics.findForUser = function(user, options = {}) {
 //   );
 // });
 
-noticeSchema.pre('findOne', function() {
-  this.updateOne(
-    { 
-      status: 'Published',
-      'deliverySettings.expiresAt': { $lt: new Date() }
-    },
-    { 
-      status: 'Expired'
-    }
-  );
-});
+// Note: Removed the problematic pre('findOne') middleware that was causing findById issues
+// Auto-expiry should be handled by application logic or scheduled jobs instead
 
 // Ensure virtual fields are serialized
 noticeSchema.set('toJSON', { virtuals: true });

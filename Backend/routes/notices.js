@@ -11,7 +11,6 @@ const {
   createNotice,
   updateNotice,
   deleteNotice,
-  markAsRead,
   getNoticesForUser,
   getNoticeAnalytics,
   removeAttachment,
@@ -87,8 +86,7 @@ const noticeValidation = [
 router.use(protect);
 
 // User routes
-router.get('/my-notices', getNoticesForUser); // Get notices targeted to current user
-router.put('/:id/read', markAsRead); // Mark notice as read
+router.get('/my-notices', getNoticesForUser); // Get notices targeted to current user  
 router.get('/categories', getNoticeCategories); // Get notice categories (accessible to all authenticated users)
 
 // Admin-only routes (only admins can manage notices)

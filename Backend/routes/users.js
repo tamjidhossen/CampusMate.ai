@@ -61,8 +61,9 @@ router.put('/profile/me',
 router.delete('/profile-picture', protect, deleteProfilePicture);
 
 // Notice routes for users
-router.get('/notices/personalized', protect, getPersonalizedNotices);
+router.get('/notices', protect, getPersonalizedNotices); // Changed from /notices/personalized for cleaner URL
 router.put('/notices/:id/read', protect, markNoticeAsRead);
+
 
 // Volunteer routes
 router.get('/volunteer-stats', protect, getVolunteerStats);
