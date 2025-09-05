@@ -12,11 +12,13 @@ import {
   Menu,
   X,
 } from "lucide-react";
+import { toast } from "sonner";
 import TextShimmerWave from "../ui/TextShimmerWave";
 import NoticePanel from "./NoticePanel";
 import HelpRequestSection from "./HelpRequestSection";
 import VolunteerLeaderboard from "./VolunteerLeaderboard";
 import ProfileModal from "../ProfileModal";
+import { sendChatMessage, ApiError } from "../../services/api";
 
 const ChatInterface = () => {
   const navigate = useNavigate();
@@ -70,31 +72,57 @@ const ChatInterface = () => {
     // Add loading message
     setMessages((prev) => [...prev, loadingMessage]);
 
-    // Simulate API call
-    setTimeout(() => {
+    try {
+      const response = await sendChatMessage(inputMessage);
+
       const botResponse = {
         id: Date.now() + 1,
         type: "bot",
-        content: getDummyResponse(),
-        timestamp: new Date(),
+        content: response.message,
+        timestamp: response.timestamp,
+        responseTime: response.responseTime,
       };
 
       setMessages((prev) =>
         prev.filter((msg) => msg.id !== "loading").concat(botResponse)
       );
-      setIsLoading(false);
-    }, 2000);
-  };
+    } catch (error) {
+      console.error("Chat API error:", error);
 
-  const getDummyResponse = () => {
-    const responses = [
-      "I understand your question about university matters. Let me help you with that information.",
-      "Based on university policies, here's what I can tell you...",
-      "That's a great question! From the university database, I found...",
-      "I can help you with that. According to the latest university guidelines...",
-      "Here's the information you need about campus services and facilities...",
-    ];
-    return responses[Math.floor(Math.random() * responses.length)];
+      let errorMessage = "I'm sorry, I encountered an error. Please try again.";
+      let toastMessage = "Failed to send message";
+
+      if (error instanceof ApiError) {
+        if (error.status === 0) {
+          errorMessage =
+            "Unable to connect to the server. Please check if the backend is running.";
+          toastMessage = "Server connection failed";
+        } else if (error.status === 408) {
+          errorMessage = "The request took too long. Please try again.";
+          toastMessage = "Request timeout";
+        } else {
+          errorMessage = error.message;
+          toastMessage = "API error occurred";
+        }
+      }
+
+      // Show toast notification for the error
+      toast.error(toastMessage);
+
+      const errorResponse = {
+        id: Date.now() + 1,
+        type: "bot",
+        content: errorMessage,
+        timestamp: new Date(),
+        isError: true,
+      };
+
+      setMessages((prev) =>
+        prev.filter((msg) => msg.id !== "loading").concat(errorResponse)
+      );
+    } finally {
+      setIsLoading(false);
+    }
   };
 
   const formatTime = (timestamp) => {
@@ -125,7 +153,8 @@ const ChatInterface = () => {
                 <Bot className="w-5 h-5 text-white" />
               </div>
               <span className="ml-3 text-xl font-bold text-white tracking-tight hidden sm:block">
-                CampusMate<span className="font-light text-orange-400">.ai</span>
+                CampusMate
+                <span className="font-light text-orange-400">.ai</span>
               </span>
             </div>
 
@@ -185,7 +214,9 @@ const ChatInterface = () => {
                 <div className="w-6 h-6 bg-gradient-to-br from-blue-500 to-purple-600 rounded-lg flex items-center justify-center shadow-lg">
                   <User className="w-3 h-3 text-white" />
                 </div>
-                <span className="hidden sm:block text-sm text-gray-300 font-medium">Profile</span>
+                <span className="hidden sm:block text-sm text-gray-300 font-medium">
+                  Profile
+                </span>
               </button>
 
               {/* Mobile Menu Button */}
@@ -284,8 +315,8 @@ const ChatInterface = () => {
                           <div
                             className={`w-8 h-8 rounded-full flex items-center justify-center ${
                               message.type === "user"
-                                ? "bg-orange-600"
-                                : "bg-blue-600"
+                                ? "bg-blue-600"
+                                : "bg-orange-600"
                             }`}
                           >
                             {message.type === "user" ? (
@@ -301,6 +332,8 @@ const ChatInterface = () => {
                           className={`rounded-2xl px-4 py-3 max-w-full break-words ${
                             message.type === "user"
                               ? "bg-orange-600 text-white"
+                              : message.isError
+                              ? "bg-red-900/50 text-red-100 border border-red-700/50"
                               : "bg-gray-800 text-gray-100"
                           }`}
                         >
@@ -309,16 +342,30 @@ const ChatInterface = () => {
                               {message.content}
                             </TextShimmerWave>
                           ) : (
-                            <p className="text-sm whitespace-pre-wrap break-words overflow-wrap-anywhere">{message.content}</p>
+                            <div className="flex items-start space-x-2">
+                              {message.isError && (
+                                <AlertCircle className="w-4 h-4 text-red-400 mt-0.5 flex-shrink-0" />
+                              )}
+                              <p className="text-sm whitespace-pre-wrap break-words overflow-wrap-anywhere flex-1">
+                                {message.content}
+                              </p>
+                            </div>
                           )}
                           <div
-                            className={`text-xs mt-1 opacity-70 ${
+                            className={`text-xs mt-1 opacity-70 flex items-center justify-between ${
                               message.type === "user"
                                 ? "text-orange-100"
+                                : message.isError
+                                ? "text-red-300"
                                 : "text-gray-400"
                             }`}
                           >
-                            {formatTime(message.timestamp)}
+                            <span>{formatTime(message.timestamp)}</span>
+                            {message.responseTime && !message.isError && (
+                              <span className="ml-2">
+                                ({message.responseTime}s)
+                              </span>
+                            )}
                           </div>
                         </div>
                       </div>

@@ -1,5 +1,6 @@
 import React from "react";
 import { BrowserRouter as Router, Routes, Route } from "react-router-dom";
+import { Toaster } from "sonner";
 import LandingPage from "./pages/LandingPage";
 import ProfilePage from "./pages/ProfilePage";
 import ChatInterface from "./components/chat/ChatInterface";
@@ -13,6 +14,7 @@ const App = () => {
         <Route path="/chat" element={<ChatInterface />} />
         <Route path="/profile" element={<ProfilePage />} />
       </Routes>
+      <Toaster position="top-right" theme="dark" richColors closeButton />
     </Router>
   );
 };
