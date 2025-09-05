@@ -1,10 +1,10 @@
-import React, { useMemo } from 'react';
-import { motion } from 'motion/react';
+import React, { useMemo } from "react";
+import { motion } from "motion/react";
 
 const TextShimmerWave = ({
   children,
-  as = 'p',
-  className = '',
+  as = "p",
+  className = "",
   duration = 1,
   zDistance = 10,
   xDistance = 2,
@@ -12,15 +12,15 @@ const TextShimmerWave = ({
   spread = 1,
   scaleDistance = 1.1,
   rotateYDistance = 10,
-  transition = { ease: 'easeInOut' }
+  transition = { ease: "easeInOut" },
 }) => {
   const Component = as;
-  const text = children || '';
-  
+  const text = children || "";
+
   const letters = useMemo(() => {
-    return text.split('').map((char, index) => ({
-      char: char === ' ' ? '\u00A0' : char, // Non-breaking space
-      index
+    return text.split("").map((char, index) => ({
+      char: char === " " ? "\u00A0" : char, // Non-breaking space
+      index,
     }));
   }, [text]);
 
@@ -31,8 +31,8 @@ const TextShimmerWave = ({
     <Component
       className={`inline-block ${className}`}
       style={{
-        '--base-color': '#9ca3af', // gray-400
-        '--base-gradient-color': '#f97316', // orange-500
+        "--base-color": "#9ca3af", // gray-400
+        "--base-gradient-color": "#f97316", // orange-500
       }}
     >
       {letters.map(({ char, index }) => (
@@ -61,11 +61,12 @@ const TextShimmerWave = ({
             ...transition,
           }}
           style={{
-            background: 'linear-gradient(45deg, var(--base-color), var(--base-gradient-color), var(--base-color))',
-            backgroundClip: 'text',
-            WebkitBackgroundClip: 'text',
-            WebkitTextFillColor: 'transparent',
-            backgroundSize: '200% 200%',
+            background:
+              "linear-gradient(45deg, var(--base-color), var(--base-gradient-color), var(--base-color))",
+            backgroundClip: "text",
+            WebkitBackgroundClip: "text",
+            WebkitTextFillColor: "transparent",
+            backgroundSize: "200% 200%",
           }}
         >
           {char}

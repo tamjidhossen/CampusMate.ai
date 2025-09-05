@@ -1,35 +1,35 @@
-import React, { useState } from 'react';
-import { motion, AnimatePresence } from 'motion/react';
-import { X, Eye, EyeOff, Mail, Lock } from 'lucide-react';
+import React, { useState } from "react";
+import { motion, AnimatePresence } from "motion/react";
+import { X, Eye, EyeOff, Mail, Lock } from "lucide-react";
 
 const AuthModal = ({ isOpen, onClose, mode, onModeChange, onSuccess }) => {
   const [showPassword, setShowPassword] = useState(false);
   const [showConfirmPassword, setShowConfirmPassword] = useState(false);
   const [formData, setFormData] = useState({
-    email: '',
-    password: '',
-    confirmPassword: ''
+    email: "",
+    password: "",
+    confirmPassword: "",
   });
 
   const handleInputChange = (e) => {
     setFormData({
       ...formData,
-      [e.target.name]: e.target.value
+      [e.target.name]: e.target.value,
     });
   };
 
   const handleSubmit = (e) => {
     e.preventDefault();
-    
+
     // Check if passwords match for registration
-    if (mode === 'register' && formData.password !== formData.confirmPassword) {
-      alert('Passwords do not match!');
+    if (mode === "register" && formData.password !== formData.confirmPassword) {
+      alert("Passwords do not match!");
       return;
     }
-    
+
     // Handle authentication logic here
-    console.log('Form submitted:', formData);
-    
+    console.log("Form submitted:", formData);
+
     // Simulate successful authentication
     if (onSuccess) {
       onSuccess();
@@ -71,12 +71,12 @@ const AuthModal = ({ isOpen, onClose, mode, onModeChange, onSuccess }) => {
           {/* Header */}
           <div className="text-center mb-8">
             <h2 className="text-3xl font-bold text-white mb-2">
-              {mode === 'login' ? 'Welcome Back' : 'Join CampusMate.ai'}
+              {mode === "login" ? "Welcome Back" : "Join CampusMate.ai"}
             </h2>
             <p className="text-gray-400">
-              {mode === 'login' 
-                ? 'Sign in to access your campus assistant' 
-                : 'Create your account to get started'}
+              {mode === "login"
+                ? "Sign in to access your campus assistant"
+                : "Create your account to get started"}
             </p>
           </div>
 
@@ -98,7 +98,7 @@ const AuthModal = ({ isOpen, onClose, mode, onModeChange, onSuccess }) => {
             <div className="relative">
               <Lock className="absolute left-3 top-1/2 transform -translate-y-1/2 w-5 h-5 text-gray-500" />
               <input
-                type={showPassword ? 'text' : 'password'}
+                type={showPassword ? "text" : "password"}
                 name="password"
                 placeholder="Password"
                 value={formData.password}
@@ -111,15 +111,19 @@ const AuthModal = ({ isOpen, onClose, mode, onModeChange, onSuccess }) => {
                 onClick={() => setShowPassword(!showPassword)}
                 className="absolute right-3 top-1/2 transform -translate-y-1/2 text-gray-500 hover:text-gray-300 transition-colors"
               >
-                {showPassword ? <EyeOff className="w-5 h-5" /> : <Eye className="w-5 h-5" />}
+                {showPassword ? (
+                  <EyeOff className="w-5 h-5" />
+                ) : (
+                  <Eye className="w-5 h-5" />
+                )}
               </button>
             </div>
 
-            {mode === 'register' && (
+            {mode === "register" && (
               <div className="relative">
                 <Lock className="absolute left-3 top-1/2 transform -translate-y-1/2 w-5 h-5 text-gray-500" />
                 <input
-                  type={showConfirmPassword ? 'text' : 'password'}
+                  type={showConfirmPassword ? "text" : "password"}
                   name="confirmPassword"
                   placeholder="Confirm Password"
                   value={formData.confirmPassword}
@@ -132,21 +136,30 @@ const AuthModal = ({ isOpen, onClose, mode, onModeChange, onSuccess }) => {
                   onClick={() => setShowConfirmPassword(!showConfirmPassword)}
                   className="absolute right-3 top-1/2 transform -translate-y-1/2 text-gray-500 hover:text-gray-300 transition-colors"
                 >
-                  {showConfirmPassword ? <EyeOff className="w-5 h-5" /> : <Eye className="w-5 h-5" />}
+                  {showConfirmPassword ? (
+                    <EyeOff className="w-5 h-5" />
+                  ) : (
+                    <Eye className="w-5 h-5" />
+                  )}
                 </button>
               </div>
             )}
 
-            {mode === 'login' && (
+            {mode === "login" && (
               <div className="flex items-center justify-between">
                 <label className="flex items-center">
                   <input
                     type="checkbox"
                     className="w-4 h-4 rounded border-gray-700 bg-gray-800 text-blue-600 focus:ring-blue-600 focus:ring-offset-0"
                   />
-                  <span className="ml-2 text-sm text-gray-400">Remember me</span>
+                  <span className="ml-2 text-sm text-gray-400">
+                    Remember me
+                  </span>
                 </label>
-                <a href="#" className="text-sm text-orange-500 hover:text-orange-400 transition-colors">
+                <a
+                  href="#"
+                  className="text-sm text-orange-500 hover:text-orange-400 transition-colors"
+                >
                   Forgot password?
                 </a>
               </div>
@@ -158,19 +171,23 @@ const AuthModal = ({ isOpen, onClose, mode, onModeChange, onSuccess }) => {
               type="submit"
               className="w-full bg-orange-600 hover:bg-orange-700 text-white py-3 rounded-xl font-medium transition-colors"
             >
-              {mode === 'login' ? 'Sign In' : 'Create Account'}
+              {mode === "login" ? "Sign In" : "Create Account"}
             </motion.button>
           </form>
 
           {/* Footer */}
           <div className="mt-6 text-center">
             <p className="text-gray-400">
-              {mode === 'login' ? "Don't have an account? " : "Already have an account? "}
+              {mode === "login"
+                ? "Don't have an account? "
+                : "Already have an account? "}
               <button
-                onClick={() => onModeChange(mode === 'login' ? 'register' : 'login')}
+                onClick={() =>
+                  onModeChange(mode === "login" ? "register" : "login")
+                }
                 className="text-orange-500 hover:text-orange-400 font-medium transition-colors"
               >
-                {mode === 'login' ? 'Sign up' : 'Sign in'}
+                {mode === "login" ? "Sign up" : "Sign in"}
               </button>
             </p>
           </div>

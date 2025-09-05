@@ -27,7 +27,7 @@ const LandingPage = () => {
 
   const handleAuthSuccess = () => {
     setIsAuthModalOpen(false);
-    navigate('/chat');
+    navigate("/chat");
   };
 
   const features = [
@@ -77,7 +77,7 @@ const LandingPage = () => {
                 initial={{ opacity: 0, x: -20 }}
                 animate={{ opacity: 1, x: 0 }}
                 className="flex items-center space-x-3 cursor-pointer"
-                onClick={() => navigate('/')}
+                onClick={() => navigate("/")}
               >
                 <div className="w-10 h-10 bg-gradient-to-r from-orange-500 to-orange-600 rounded-xl flex items-center justify-center">
                   <Bot className="w-6 h-6 text-white" />
@@ -319,9 +319,9 @@ const LandingPage = () => {
         <div className="max-w-6xl mx-auto">
           <div className="border-t border-gray-800 pt-8">
             <div className="flex flex-col md:flex-row justify-between items-center">
-              <div 
+              <div
                 className="flex items-center space-x-3 mb-4 md:mb-0 cursor-pointer"
-                onClick={() => navigate('/')}
+                onClick={() => navigate("/")}
               >
                 <div className="w-8 h-8 bg-gradient-to-r from-orange-500 to-orange-600 rounded-lg flex items-center justify-center">
                   <Bot className="w-5 h-5 text-white" />
