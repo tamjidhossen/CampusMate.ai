@@ -1,1 +1,0 @@
-# CampusMate.ai
