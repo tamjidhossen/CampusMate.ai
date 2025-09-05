@@ -124,7 +124,7 @@ volunteerRequestSchema.index({ category: 1, status: 1 });
 
 // Virtual for response count
 volunteerRequestSchema.virtual('responseCount').get(function() {
-  return this.responses.length;
+  return this.responses ? this.responses.length : 0;
 });
 
 // Virtual for time remaining
@@ -197,9 +197,9 @@ volunteerRequestSchema.methods.markFulfilled = function(rating, feedback) {
   return this.save();
 };
 
-// Middleware to automatically update expired requests
-volunteerRequestSchema.pre('find', function() {
-  this.updateMany(
+// Static method to update expired requests (call manually when needed)
+volunteerRequestSchema.statics.updateExpiredRequests = function() {
+  return this.updateMany(
     { 
       status: 'Active', 
       expiresAt: { $lt: new Date() } 
@@ -208,19 +208,9 @@ volunteerRequestSchema.pre('find', function() {
       status: 'Expired' 
     }
   );
-});
+};
 
-volunteerRequestSchema.pre('findOne', function() {
-  this.updateOne(
-    { 
-      status: 'Active', 
-      expiresAt: { $lt: new Date() } 
-    },
-    { 
-      status: 'Expired' 
-    }
-  );
-});
+// Note: Removed problematic pre middleware to prevent query issues
 
 // Ensure virtual fields are serialized
 volunteerRequestSchema.set('toJSON', { virtuals: true });
