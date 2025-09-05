@@ -2,7 +2,7 @@ import React, { useState } from 'react';
 import { motion, AnimatePresence } from 'motion/react';
 import { X, Eye, EyeOff, Mail, Lock } from 'lucide-react';
 
-const AuthModal = ({ isOpen, onClose, mode, onModeChange }) => {
+const AuthModal = ({ isOpen, onClose, mode, onModeChange, onSuccess }) => {
   const [showPassword, setShowPassword] = useState(false);
   const [showConfirmPassword, setShowConfirmPassword] = useState(false);
   const [formData, setFormData] = useState({
@@ -29,7 +29,13 @@ const AuthModal = ({ isOpen, onClose, mode, onModeChange }) => {
     
     // Handle authentication logic here
     console.log('Form submitted:', formData);
-    onClose();
+    
+    // Simulate successful authentication
+    if (onSuccess) {
+      onSuccess();
+    } else {
+      onClose();
+    }
   };
 
   if (!isOpen) return null;
