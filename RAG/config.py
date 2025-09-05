@@ -15,7 +15,11 @@ else:
 
 # Model configurations
 LLM_MODEL = "gemini-2.5-flash"
-EMBEDDING_MODEL = "models/embedding-001"
+GEMINI_EMBEDDING_MODEL = "models/embedding-001"  # Gemini embedding model
+OLLAMA_EMBEDDING_MODEL = "nomic-embed-text"  # Ollama embedding model
+
+# Embedding provider selection (can be "gemini" or "ollama")
+EMBEDDING_PROVIDER = os.getenv("EMBEDDING_PROVIDER", "gemini")
 
 # Vector store configuration
 VECTOR_DB_PATH = "./chroma_langchain_db"

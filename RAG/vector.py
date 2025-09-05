@@ -1,3 +1,4 @@
+from langchain_ollama import OllamaEmbeddings
 from langchain_google_genai import GoogleGenerativeAIEmbeddings
 from langchain_chroma import Chroma
 from langchain_core.documents import Document
@@ -6,13 +7,18 @@ import os
 import json
 import time
 from config import (
-    VECTOR_DB_PATH, COLLECTION_NAME,
+    GEMINI_EMBEDDING_MODEL, OLLAMA_EMBEDDING_MODEL, VECTOR_DB_PATH, COLLECTION_NAME,
     CHUNK_SIZE, CHUNK_OVERLAP, RETRIEVAL_K,
-    QA_FILE, STRUCTURE_FILE, EMBEDDING_MODEL
+    QA_FILE, STRUCTURE_FILE
 )
 
-# Initialize embeddings and text splitter
-embeddings = GoogleGenerativeAIEmbeddings(model=EMBEDDING_MODEL)
+
+# Option 1: Ollama Embeddings
+embeddings = OllamaEmbeddings(model=OLLAMA_EMBEDDING_MODEL)
+
+# Option 2: Google Gemini Embeddings (currently active)
+# embeddings = GoogleGenerativeAIEmbeddings(model=EMBEDDING_MODEL)
+
 # vector = embeddings.embed_query("Hello world")
 # print(vector[:5])
 
@@ -52,34 +58,15 @@ if add_documents:
                 documents.append(document)
         
         doc_len = len(documents)
-        if doc_len >= 20:  # Smaller batches to avoid rate limits
+        if doc_len >= 50: 
             total_chunks += doc_len
-            print(f"Adding {doc_len} chunks to vector store")
-            try:
-                vector_store.add_documents(documents=documents)
-                documents = []
-                print(f"Successfully added batch. Waiting 30 seconds...")
-                time.sleep(30)  # Shorter delay but more frequent
-            except Exception as e:
-                print(f"Error adding documents: {e}")
-                print("Waiting 60 seconds before retrying...")
-                time.sleep(60)
-                # Retry with the same documents
-                try:
-                    vector_store.add_documents(documents=documents)
-                    documents = []
-                    print("Retry successful")
-                except Exception as retry_error:
-                    print(f"Retry failed: {retry_error}")
-                    break
+            print(f"Adding {doc_len} chunks to vectore store")
+            vector_store.add_documents(documents=documents)
+            documents = []
+            # time.sleep(60) # gemini embedding has 30,000 TPM
 
     if documents:
-        try:
-            vector_store.add_documents(documents=documents)
-            total_chunks += len(documents)
-            print(f"Added final batch of {len(documents)} chunks")
-        except Exception as e:
-            print(f"Error adding final batch: {e}")
+        vector_store.add_documents(documents=documents)
 
     print(f"Total chunks added: {total_chunks}")
     

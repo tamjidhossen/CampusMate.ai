@@ -1,6 +1,6 @@
 # University Helpdesk Chatbot
 
-A RAG-based (Retrieval-Augmented Generation) chatbot for **Jatiya Kabi Kazi Nazrul Islam University** using LangChain and Ollama. This chatbot provides accurate information about university departments, faculty, admission procedures, and campus facilities.
+A RAG-based (Retrieval-Augmented Generation) chatbot for **Jatiya Kabi Kazi Nazrul Islam University** using LangChain with dual embedding support (Ollama and Google Gemini). This chatbot provides accurate information about university departments, faculty, admission procedures, and campus facilities.
 
 ## Features
 
@@ -8,8 +8,9 @@ A RAG-based (Retrieval-Augmented Generation) chatbot for **Jatiya Kabi Kazi Nazr
 - 👥 Faculty and department details
 - 📚 Admission procedures and requirements
 - 🏢 Campus facilities and services
-- ⚡ Fast response times with local LLM
+- ⚡ Fast response times with local or cloud-based LLM
 - 🔍 Context-aware answers using vector search
+- 🔄 Dual embedding support: Ollama (local) or Google Gemini (cloud)
 - 📊 Optional LangSmith integration for monitoring and debugging
 
 ## Setup
@@ -34,7 +35,9 @@ A RAG-based (Retrieval-Augmented Generation) chatbot for **Jatiya Kabi Kazi Nazr
    pip install -r requirements.txt
    ```
 
-4. **Install and setup Ollama models:**
+4. **Setup embedding models:**
+
+   **Option A: Use Ollama (Local, Free)**
 
    ```bash
    # Install Ollama from https://ollama.ai
@@ -42,7 +45,33 @@ A RAG-based (Retrieval-Augmented Generation) chatbot for **Jatiya Kabi Kazi Nazr
    ollama pull nomic-embed-text  # Embedding model
    ```
 
-5. **Configure LangSmith (Optional):**
+   **Option B: Use Google Gemini (Cloud, Requires API Key)**
+
+   Set up your Google API key in the `.env` file (see step 5).
+
+5. **Configure environment variables:**
+
+   Create a `.env` file in the project root with the following configuration:
+
+   ```bash
+   # Embedding Provider Configuration
+   # Set to "gemini" or "ollama" to choose embedding provider
+   EMBEDDING_PROVIDER=gemini
+
+   # Google API Key (required for Gemini embeddings and LLM)
+   GOOGLE_API_KEY=your_google_api_key_here
+
+   # CORS Origins (optional)
+   CORS_ORIGINS=http://localhost:5173,http://localhost:3000
+   ```
+
+   **To get a Google API key:**
+
+   1. Go to [Google AI Studio](https://aistudio.google.com/)
+   2. Create a new API key
+   3. Replace `your_google_api_key_here` with your actual API key
+
+6. **Configure LangSmith (Optional):**
 
    LangSmith is a platform for monitoring, debugging, and improving LLM applications. You can either enable it for enhanced observability or disable it completely.
 
@@ -74,7 +103,7 @@ A RAG-based (Retrieval-Augmented Generation) chatbot for **Jatiya Kabi Kazi Nazr
 
    Or simply don't create a `.env` file - the application will work without LangSmith.
 
-6. **Initialize the vector database:**
+7. **Initialize the vector database:**
 
    ```bash
    python vector.py
@@ -82,7 +111,7 @@ A RAG-based (Retrieval-Augmented Generation) chatbot for **Jatiya Kabi Kazi Nazr
 
    This will process the data files and create the local vector database.
 
-7. **Run the chatbot:**
+8. **Run the chatbot:**
    ```bash
    python main.py
    ```
