@@ -8,11 +8,11 @@ import time
 from config import (
     VECTOR_DB_PATH, COLLECTION_NAME,
     CHUNK_SIZE, CHUNK_OVERLAP, RETRIEVAL_K,
-    QA_FILE, STRUCTURE_FILE
+    QA_FILE, STRUCTURE_FILE, EMBEDDING_MODEL
 )
 
 # Initialize embeddings and text splitter
-embeddings = GoogleGenerativeAIEmbeddings(model="models/embedding-001")
+embeddings = GoogleGenerativeAIEmbeddings(model=EMBEDDING_MODEL)
 # vector = embeddings.embed_query("Hello world")
 # print(vector[:5])
 
@@ -52,15 +52,34 @@ if add_documents:
                 documents.append(document)
         
         doc_len = len(documents)
-        if doc_len >= 50: 
+        if doc_len >= 20:  # Smaller batches to avoid rate limits
             total_chunks += doc_len
-            print(f"Adding {doc_len} chunks to vectore store")
-            vector_store.add_documents(documents=documents)
-            documents = []
-            time.sleep(60) # gemini embedding has 30,000 TPM
+            print(f"Adding {doc_len} chunks to vector store")
+            try:
+                vector_store.add_documents(documents=documents)
+                documents = []
+                print(f"Successfully added batch. Waiting 30 seconds...")
+                time.sleep(30)  # Shorter delay but more frequent
+            except Exception as e:
+                print(f"Error adding documents: {e}")
+                print("Waiting 60 seconds before retrying...")
+                time.sleep(60)
+                # Retry with the same documents
+                try:
+                    vector_store.add_documents(documents=documents)
+                    documents = []
+                    print("Retry successful")
+                except Exception as retry_error:
+                    print(f"Retry failed: {retry_error}")
+                    break
 
     if documents:
-        vector_store.add_documents(documents=documents)
+        try:
+            vector_store.add_documents(documents=documents)
+            total_chunks += len(documents)
+            print(f"Added final batch of {len(documents)} chunks")
+        except Exception as e:
+            print(f"Error adding final batch: {e}")
 
     print(f"Total chunks added: {total_chunks}")
     
