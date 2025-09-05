@@ -16,6 +16,7 @@ import TextShimmerWave from "../ui/TextShimmerWave";
 import NoticePanel from "./NoticePanel";
 import HelpRequestSection from "./HelpRequestSection";
 import VolunteerLeaderboard from "./VolunteerLeaderboard";
+import ProfileModal from "../ProfileModal";
 
 const ChatInterface = () => {
   const navigate = useNavigate();
@@ -33,6 +34,7 @@ const ChatInterface = () => {
   const [activeTab, setActiveTab] = useState("chat");
   const [isNoticePanelOpen, setIsNoticePanelOpen] = useState(false);
   const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
+  const [isProfileModalOpen, setIsProfileModalOpen] = useState(false);
   const messagesEndRef = useRef(null);
   const chatContainerRef = useRef(null);
 
@@ -176,12 +178,15 @@ const ChatInterface = () => {
               </button>
 
               {/* User Profile */}
-              <div className="flex items-center space-x-2 cursor-pointer px-3 py-2 h-10 rounded-xl hover:bg-gray-800/60 transition-all duration-300 border border-gray-700/50 hover:border-gray-600/50">
+              <button
+                onClick={() => setIsProfileModalOpen(true)}
+                className="flex items-center space-x-2 cursor-pointer px-3 py-2 h-10 rounded-xl hover:bg-gray-800/60 transition-all duration-300 border border-gray-700/50 hover:border-gray-600/50"
+              >
                 <div className="w-6 h-6 bg-gradient-to-br from-blue-500 to-purple-600 rounded-lg flex items-center justify-center shadow-lg">
                   <User className="w-3 h-3 text-white" />
                 </div>
                 <span className="hidden sm:block text-sm text-gray-300 font-medium">Profile</span>
-              </div>
+              </button>
 
               {/* Mobile Menu Button */}
               <button
@@ -363,6 +368,12 @@ const ChatInterface = () => {
           onClose={() => setIsNoticePanelOpen(false)}
         />
       </div>
+
+      {/* Profile Modal */}
+      <ProfileModal
+        isOpen={isProfileModalOpen}
+        onClose={() => setIsProfileModalOpen(false)}
+      />
     </div>
   );
 };
