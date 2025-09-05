@@ -138,6 +138,19 @@ Backend/
 | PUT | `/users/:id/verify` | Verify user account | Admin |
 | GET | `/dashboard` | Admin dashboard | Admin |
 
+### User Routes (`/api/users`)
+
+| Method | Endpoint | Description | Access |
+|--------|----------|-------------|---------|
+| GET | `/:id` | Get user profile by ID | Private |
+| GET | `/profile/me` | Get current user's profile | Private |
+| PUT | `/profile/me` | Update current user's profile | Private |
+| DELETE | `/profile-picture` | Delete profile picture | Private |
+| GET | `/notices/personalized` | Get personalized notices | Private |
+| PUT | `/notices/:id/read` | Mark notice as read | Private |
+| GET | `/volunteer-stats` | Get volunteer statistics | Private |
+| GET | `/department/:department` | Get users by department | Admin |
+
 ### Volunteer Routes (`/api/volunteers`)
 
 | Method | Endpoint | Description | Access |
@@ -473,7 +486,73 @@ fetch('/api/auth/profile-picture', {
 });
 ```
 
+### 👤 User Profile Management Examples
+
+#### Get Current User Profile
+```javascript
+// GET /api/users/profile/me
+fetch('/api/users/profile/me', {
+  headers: {
+    'Authorization': `Bearer ${token}`
+  }
+});
+```
+
+#### Update User Profile
+```javascript
+// PUT /api/users/profile/me
+const formData = new FormData();
+formData.append('name', 'Updated Name');
+formData.append('phone', '+880-123-456-7890');
+formData.append('isVolunteer', 'true');
+formData.append('profilePicture', fileInput.files[0]);
+
+fetch('/api/users/profile/me', {
+  method: 'PUT',
+  body: formData,
+  headers: {
+    'Authorization': `Bearer ${token}`
+  }
+});
+```
+
+#### Get Personalized Notices
+```javascript
+// GET /api/users/notices/personalized?category=Academic&page=1&limit=10
+fetch('/api/users/notices/personalized?category=Academic&page=1&limit=10', {
+  headers: {
+    'Authorization': `Bearer ${token}`
+  }
+});
+```
+
+#### Mark Notice as Read
+```javascript
+// PUT /api/users/notices/:id/read
+fetch(`/api/users/notices/${noticeId}/read`, {
+  method: 'PUT',
+  headers: {
+    'Authorization': `Bearer ${token}`
+  }
+});
+```
+
 ## Notice System Features
+
+### 📊 Personalized Notice System
+- **Smart Targeting** - Notices delivered based on user profile
+- **Multiple Criteria** - Department, role, session, blood group, volunteer status
+- **Read Tracking** - Mark notices as read, track engagement
+- **Filtering Options** - Filter by category, priority, read status
+- **Pagination** - Efficient loading for large notice lists
+- **Expiration Handling** - Automatic filtering of expired notices
+
+### 👤 User Profile Management
+- **Complete Profiles** - Name, contact, academic, and personal info
+- **Profile Pictures** - Upload, update, delete profile images
+- **Role-Based Access** - Different permissions for students, teachers, staff, admins
+- **Activity Tracking** - Last active timestamps
+- **Volunteer Statistics** - Performance metrics for volunteers
 
 ### 🎯 Advanced Targeting System
 - **Multi-Criteria Targeting** - Combine multiple targeting options

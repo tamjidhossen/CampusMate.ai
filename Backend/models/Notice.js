@@ -121,6 +121,12 @@ const noticeSchema = new mongoose.Schema({
       enum: ['1st', '2nd', '3rd', '4th', 'Masters', 'PhD', 'all']
     }],
     
+    // Session targeting (for students)
+    sessions: [{
+      type: String,
+      enum: ['2024-25', '2023-24', '2022-23', '2021-22', '2020-21', '2019-20', '2018-19', '2017-18']
+    }],
+    
     // Gender targeting (if needed for specific notices)
     gender: {
       type: String,
