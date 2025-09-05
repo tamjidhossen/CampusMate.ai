@@ -1,22 +1,23 @@
-import React, { useState } from 'react';
-import { motion, AnimatePresence } from 'motion/react';
-import { 
-  Bot, 
-  MessageSquare, 
-  Users, 
+import React, { useState } from "react";
+import { motion, AnimatePresence } from "motion/react";
+import {
+  Bot,
+  MessageSquare,
+  Users,
   Bell,
   ArrowRight,
   Menu,
   X,
   Check,
-  Star
-} from 'lucide-react';
-import AuthModal from './components/AuthModal';
-import './App.css';
+  Star,
+} from "lucide-react";
+import AuthModal from "./components/AuthModal";
+import DarkVeil from "./components/DarkVeil";
+import "./App.css";
 
 const App = () => {
   const [isAuthModalOpen, setIsAuthModalOpen] = useState(false);
-  const [authMode, setAuthMode] = useState('login');
+  const [authMode, setAuthMode] = useState("login");
   const [isMenuOpen, setIsMenuOpen] = useState(false);
 
   const openAuthModal = (mode) => {
@@ -28,35 +29,39 @@ const App = () => {
     {
       icon: Bot,
       title: "AI Assistant",
-      description: "Get instant answers to university questions with our intelligent chatbot."
+      description:
+        "Get instant answers to university questions with our intelligent chatbot.",
     },
     {
       icon: Bell,
       title: "Smart Notices",
-      description: "Receive personalized notifications based on your role and preferences."
+      description:
+        "Receive personalized notifications based on your role and preferences.",
     },
     {
       icon: Users,
       title: "Volunteer Network",
-      description: "Connect with volunteers for emergency assistance and support."
-    }
+      description:
+        "Connect with volunteers for emergency assistance and support.",
+    },
   ];
 
   return (
     <div className="min-h-screen bg-gray-900 relative overflow-hidden">
-      {/* Dot Pattern Background */}
-      <div className="absolute inset-0 opacity-8">
-        <div 
-          className="absolute inset-0" 
-          style={{
-            backgroundImage: `url('/circular_bg_dots.png')`,
-            backgroundSize: 'cover',
-            backgroundPosition: 'center',
-            backgroundRepeat: 'no-repeat',
-            filter: 'hue-rotate(40deg) brightness(0.6) contrast(0.8)'
-          }}
-        ></div>
+      {/* Dark Veil Animated Background */}
+      <div className="absolute inset-0">
+        <DarkVeil
+          hueShift={30}
+          noiseIntensity={0}
+          scanlineIntensity={0}
+          speed={1.5}
+          scanlineFrequency={0}
+          warpAmount={0}
+        />
       </div>
+
+      {/* Overlay for better text readability */}
+      <div className="absolute inset-0 bg-gray-900/20"></div>
 
       {/* Navigation */}
       <nav className="relative z-50 px-6 py-6">
@@ -72,16 +77,27 @@ const App = () => {
                   <Bot className="w-6 h-6 text-white" />
                 </div>
                 <span className="text-xl font-bold text-white tracking-tight">
-                  CampusMate<span className="font-light text-orange-400">.ai</span>
+                  CampusMate
+                  <span className="font-light text-orange-400">.ai</span>
                 </span>
               </motion.div>
 
               {/* Desktop Navigation */}
               <div className="hidden md:flex items-center space-x-8">
-                <a href="#features" className="text-gray-300 hover:text-white transition-colors">Features</a>
-                <a href="#about" className="text-gray-300 hover:text-white transition-colors">About</a>
+                <a
+                  href="#features"
+                  className="text-gray-300 hover:text-white transition-colors"
+                >
+                  Features
+                </a>
+                <a
+                  href="#about"
+                  className="text-gray-300 hover:text-white transition-colors"
+                >
+                  About
+                </a>
                 <button
-                  onClick={() => openAuthModal('login')}
+                  onClick={() => openAuthModal("login")}
                   className="text-gray-300 hover:text-white transition-colors"
                 >
                   Login
@@ -89,7 +105,7 @@ const App = () => {
                 <motion.button
                   whileHover={{ scale: 1.02 }}
                   whileTap={{ scale: 0.98 }}
-                  onClick={() => openAuthModal('register')}
+                  onClick={() => openAuthModal("register")}
                   className="bg-orange-600 hover:bg-orange-700 text-white px-6 py-2 rounded-lg font-medium transition-colors"
                 >
                   Get Started
@@ -102,7 +118,11 @@ const App = () => {
                   onClick={() => setIsMenuOpen(!isMenuOpen)}
                   className="text-white p-2"
                 >
-                  {isMenuOpen ? <X className="w-6 h-6" /> : <Menu className="w-6 h-6" />}
+                  {isMenuOpen ? (
+                    <X className="w-6 h-6" />
+                  ) : (
+                    <Menu className="w-6 h-6" />
+                  )}
                 </button>
               </div>
             </div>
@@ -112,21 +132,31 @@ const App = () => {
               {isMenuOpen && (
                 <motion.div
                   initial={{ opacity: 0, height: 0 }}
-                  animate={{ opacity: 1, height: 'auto' }}
+                  animate={{ opacity: 1, height: "auto" }}
                   exit={{ opacity: 0, height: 0 }}
                   className="md:hidden mt-4 pt-4 border-t border-gray-700"
                 >
                   <div className="flex flex-col space-y-4">
-                    <a href="#features" className="text-gray-300 hover:text-white transition-colors">Features</a>
-                    <a href="#about" className="text-gray-300 hover:text-white transition-colors">About</a>
+                    <a
+                      href="#features"
+                      className="text-gray-300 hover:text-white transition-colors"
+                    >
+                      Features
+                    </a>
+                    <a
+                      href="#about"
+                      className="text-gray-300 hover:text-white transition-colors"
+                    >
+                      About
+                    </a>
                     <button
-                      onClick={() => openAuthModal('login')}
+                      onClick={() => openAuthModal("login")}
                       className="text-left text-gray-300 hover:text-white transition-colors"
                     >
                       Login
                     </button>
                     <button
-                      onClick={() => openAuthModal('register')}
+                      onClick={() => openAuthModal("register")}
                       className="bg-orange-600 hover:bg-orange-700 text-white px-6 py-2 rounded-lg font-medium text-left transition-colors"
                     >
                       Get Started
@@ -149,17 +179,22 @@ const App = () => {
           >
             <h1 className="text-5xl md:text-7xl font-bold text-white mb-6 leading-tight tracking-tight">
               Your <span className="font-light text-gray-300">Smart</span>
-              <span className="text-orange-500 block font-black">Campus Companion</span>
+              <span className="text-orange-500 block font-black">
+                Campus Companion
+              </span>
             </h1>
             <p className="text-xl md:text-2xl text-gray-300 mb-12 max-w-2xl mx-auto leading-relaxed font-light opacity-90">
-              Streamline university communication with <span className="font-medium text-white">AI-powered assistance</span>, 
-              personalized notifications, and instant volunteer connections.
+              Streamline university communication with{" "}
+              <span className="font-medium text-white">
+                AI-powered assistance
+              </span>
+              , personalized notifications, and instant volunteer connections.
             </p>
             <div className="flex flex-col sm:flex-row gap-4 justify-center">
               <motion.button
                 whileHover={{ scale: 1.02 }}
                 whileTap={{ scale: 0.98 }}
-                onClick={() => openAuthModal('register')}
+                onClick={() => openAuthModal("register")}
                 className="bg-orange-600 hover:bg-orange-700 text-white px-8 py-4 rounded-xl text-lg font-medium transition-colors flex items-center justify-center space-x-2"
               >
                 <span>Get Started</span>
@@ -187,10 +222,14 @@ const App = () => {
             className="text-center mb-16"
           >
             <h2 className="text-4xl md:text-5xl font-black text-white mb-4 tracking-tight">
-              Everything <span className="font-light text-gray-300">you need</span>
+              Everything{" "}
+              <span className="font-light text-gray-300">you need</span>
             </h2>
             <p className="text-lg md:text-xl text-gray-400 max-w-2xl mx-auto font-light opacity-80">
-              Powerful features designed to <span className="font-medium text-gray-200">enhance your campus experience</span>
+              Powerful features designed to{" "}
+              <span className="font-medium text-gray-200">
+                enhance your campus experience
+              </span>
             </p>
           </motion.div>
 
@@ -229,11 +268,18 @@ const App = () => {
           >
             <div className="text-center">
               <h2 className="text-4xl md:text-5xl font-black text-white mb-6 tracking-tight">
-                Built for <span className="font-light text-gray-300">Students</span>, by <span className="text-orange-500 font-bold">Students</span>
+                Built for{" "}
+                <span className="font-light text-gray-300">Students</span>, by{" "}
+                <span className="text-orange-500 font-bold">Students</span>
               </h2>
               <p className="text-lg md:text-xl text-gray-300 mb-8 leading-relaxed font-light opacity-90">
-                CampusMate.ai addresses the <span className="font-medium text-white">communication challenges</span> in universities by providing 
-                a centralized platform for information access, emergency coordination, and community building.
+                CampusMate.ai addresses the{" "}
+                <span className="font-medium text-white">
+                  communication challenges
+                </span>{" "}
+                in universities by providing a centralized platform for
+                information access, emergency coordination, and community
+                building.
               </p>
               <div className="flex flex-wrap justify-center gap-6 mb-8">
                 <div className="flex items-center space-x-2 text-gray-300">
@@ -252,7 +298,7 @@ const App = () => {
               <motion.button
                 whileHover={{ scale: 1.02 }}
                 whileTap={{ scale: 0.98 }}
-                onClick={() => openAuthModal('register')}
+                onClick={() => openAuthModal("register")}
                 className="bg-orange-600 hover:bg-orange-700 text-white px-8 py-3 rounded-xl font-medium transition-colors"
               >
                 Join the Community
@@ -272,13 +318,20 @@ const App = () => {
                   <Bot className="w-5 h-5 text-white" />
                 </div>
                 <span className="text-lg font-bold text-white tracking-tight">
-                  CampusMate<span className="font-light text-orange-400">.ai</span>
+                  CampusMate
+                  <span className="font-light text-orange-400">.ai</span>
                 </span>
               </div>
               <div className="flex items-center space-x-6 text-gray-400 text-sm">
-                <a href="#" className="hover:text-white transition-colors">Privacy</a>
-                <a href="#" className="hover:text-white transition-colors">Terms</a>
-                <a href="#" className="hover:text-white transition-colors">Contact</a>
+                <a href="#" className="hover:text-white transition-colors">
+                  Privacy
+                </a>
+                <a href="#" className="hover:text-white transition-colors">
+                  Terms
+                </a>
+                <a href="#" className="hover:text-white transition-colors">
+                  Contact
+                </a>
               </div>
             </div>
             <div className="mt-6 text-center text-gray-500 text-sm">
