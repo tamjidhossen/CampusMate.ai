@@ -69,28 +69,16 @@ const createTokenResponse = (user, statusCode, res) => {
 // @access  Public
 exports.register = asyncHandler(async (req, res, next) => {
   const {
-    name,
     email,
     password,
-    phone,
-    department,
-    residence,
-    bloodGroup,
     role = 'student'
   } = req.body;
 
   // Create user
   const user = await User.create({
-    name,
     email,
     password,
-    phone,
-    department,
-    residence,
-    bloodGroup,
     role: role === 'admin' ? 'student' : role, // Prevent admin registration through API
-    isVolunteer: false,
-    isVerified: false
   });
 
   res.status(201).json({
@@ -100,9 +88,6 @@ exports.register = asyncHandler(async (req, res, next) => {
       id: user._id,
       name: user.name,
       email: user.email,
-      department: user.department,
-      role: user.role,
-      isVerified: user.isVerified
     }
   });
 });

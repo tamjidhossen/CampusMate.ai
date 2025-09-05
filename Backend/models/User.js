@@ -4,7 +4,6 @@ const bcrypt = require('bcryptjs');
 const userSchema = new mongoose.Schema({
   name: {
     type: String,
-    required: [true, 'Name is required'],
     trim: true,
     maxlength: [100, 'Name cannot exceed 100 characters']
   },
@@ -26,12 +25,10 @@ const userSchema = new mongoose.Schema({
   },
   phone: {
     type: String,
-    required: [true, 'Phone number is required'],
     match: [/^\+?[\d\s-()]+$/, 'Please enter a valid phone number']
   },
   department: {
     type: String,
-    required: [true, 'Department is required'],
     enum: {
       values: [
         // Faculty of Arts and Humanities
@@ -78,12 +75,10 @@ const userSchema = new mongoose.Schema({
   },
   residence: {
     type: String,
-    required: [true, 'Residence information is required'],
     maxlength: [200, 'Residence cannot exceed 200 characters']
   },
   bloodGroup: {
     type: String,
-    required: [true, 'Blood group is required'],
     enum: {
       values: ['A+', 'A-', 'B+', 'B-', 'AB+', 'AB-', 'O+', 'O-'],
       message: 'Please select a valid blood group'
@@ -96,13 +91,6 @@ const userSchema = new mongoose.Schema({
   },
   session: {
     type: String,
-    enum: {
-      values: ['2024-25', '2023-24', '2022-23', '2021-22', '2020-21', '2019-20', '2018-19', '2017-18'],
-      message: 'Please select a valid session'
-    },
-    required: function() {
-      return this.role === 'student';
-    }
   },
   profilePicture: {
     type: String,
@@ -124,12 +112,6 @@ const userSchema = new mongoose.Schema({
     type: Boolean,
     default: false
   },
-  verificationToken: String,
-  verifiedBy: {
-    type: mongoose.Schema.ObjectId,
-    ref: 'User'
-  },
-  verifiedAt: Date,
   resetPasswordToken: String,
   resetPasswordExpire: Date,
   volunteerStats: {

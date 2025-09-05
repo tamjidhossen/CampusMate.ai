@@ -19,11 +19,6 @@ const router = express.Router();
 
 // Validation rules
 const registerValidation = [
-  body('name')
-    .notEmpty()
-    .withMessage('Name is required')
-    .isLength({ min: 2, max: 100 })
-    .withMessage('Name must be between 2 and 100 characters'),
   body('email')
     .isEmail()
     .withMessage('Please provide a valid email')
@@ -33,78 +28,6 @@ const registerValidation = [
     .withMessage('Password must be at least 6 characters')
     .matches(/^(?=.*[a-z])(?=.*[A-Z])(?=.*\d)/)
     .withMessage('Password must contain at least one uppercase letter, one lowercase letter, and one number'),
-  body('phone')
-    .matches(/^\+?[\d\s-()]+$/)
-    .withMessage('Please provide a valid phone number'),
-  body('department')
-    .notEmpty()
-    .withMessage('Department is required')
-    .isIn([
-      // Faculty of Arts and Humanities
-      'Bangla Language and Literature',
-      'English Language and Literature',
-      'Music',
-      'Theatre and Performance Studies',
-      'Film and Media Studies',
-      'Philosophy',
-      'History',
-      'Fine Arts',
-      
-      // Faculty of Science and Engineering
-      'Computer Science and Engineering',
-      'Electrical and Electronic Engineering',
-      'Environmental Science and Engineering',
-      'Statistics',
-      
-      // Faculty of Social Sciences
-      'Economics',
-      'Public Administration and Governance Studies',
-      'Folklore',
-      'Anthropology',
-      'Population Science',
-      'Local Government and Urban Development',
-      'Sociology',
-      
-      // Faculty of Business Studies
-      'Accounting and Information Systems',
-      'Finance and Banking',
-      'Human Resource Management',
-      'Management',
-      'Marketing',
-      
-      // Faculty of Law
-      'Law and Justice',
-      
-      // Other
-      'Administration',
-      'Other'
-    ])
-    .withMessage('Please select a valid department from JKKNIU'),
-  body('residence')
-    .notEmpty()
-    .withMessage('Residence information is required')
-    .isLength({ max: 200 })
-    .withMessage('Residence cannot exceed 200 characters'),
-  body('bloodGroup')
-    .isIn(['A+', 'A-', 'B+', 'B-', 'AB+', 'AB-', 'O+', 'O-'])
-    .withMessage('Please select a valid blood group'),
-  body('role')
-    .optional()
-    .isIn(['student', 'teacher'])
-    .withMessage('Role must be either student or teacher'),
-  body('session')
-    .custom((value, { req }) => {
-      // If role is student, session is required
-      if (req.body.role === 'student' || (!req.body.role && req.body.email && req.body.email.includes('@student'))) {
-        if (!value) {
-          throw new Error('Session is required for students');
-        }
-        if (!['2024-25', '2023-24', '2022-23', '2021-22', '2020-21', '2019-20', '2018-19', '2017-18'].includes(value)) {
-          throw new Error('Please select a valid session');
-        }
-      }
-      return true;
-    })
 ];
 
 const loginValidation = [
