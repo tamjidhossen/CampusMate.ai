@@ -64,9 +64,9 @@ const App = () => {
       <div className="absolute inset-0 bg-gray-900/20"></div>
 
       {/* Navigation */}
-      <nav className="relative z-50 px-6 py-6">
+      <nav className="fixed top-0 left-0 right-0 z-50 px-6 py-4 transition-all duration-300 ease-in-out">
         <div className="max-w-7xl mx-auto">
-          <div className="glass-card-subtle rounded-2xl px-6 py-4">
+          <div className="glass-morphism-nav rounded-2xl px-6 py-4 border border-white/10 shadow-2xl">
             <div className="flex items-center justify-between">
               <motion.div
                 initial={{ opacity: 0, x: -20 }}
@@ -134,7 +134,7 @@ const App = () => {
                   initial={{ opacity: 0, height: 0 }}
                   animate={{ opacity: 1, height: "auto" }}
                   exit={{ opacity: 0, height: 0 }}
-                  className="md:hidden mt-4 pt-4 border-t border-gray-700"
+                  className="md:hidden mt-4 pt-4 border-t border-white/10"
                 >
                   <div className="flex flex-col space-y-4">
                     <a
@@ -170,7 +170,7 @@ const App = () => {
       </nav>
 
       {/* Hero Section */}
-      <section className="relative z-10 px-6 py-20">
+      <section className="relative z-10 px-6 pt-32 pb-20">
         <div className="max-w-4xl mx-auto text-center">
           <motion.div
             initial={{ opacity: 0, y: 20 }}
