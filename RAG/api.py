@@ -1,33 +1,43 @@
-from dotenv import load_dotenv
-import os
-
-load_dotenv()
+from fastapi import FastAPI
+from pydantic import BaseModel
+import time
 
 from langchain_google_genai import ChatGoogleGenerativeAI
 from langchain_core.prompts import ChatPromptTemplate
-import time
+
 from vector import retriever
 from config import LLM_MODEL, CHATBOT_TEMPLATE
+
+app = FastAPI()
 
 model = ChatGoogleGenerativeAI(model=LLM_MODEL)
 
 template = CHATBOT_TEMPLATE
-
 prompt = ChatPromptTemplate.from_template(template)
 chain = prompt | model
 
-while True:
-    print("\n-------------------------------")
-    question = input("Ask your question (q to quit): ")
-    print("\n")
-    if question == "q":
-        break
+class ChatRequest(BaseModel):
+    question: str
+
+@app.get("/")
+def read_root():
+    return {"message": "Welcome to the RAG API"}
+
+@app.post("/chat")
+def chat(request: ChatRequest):
+    question = request.question
     
-    # context = []
     context = retriever.invoke(question)
     start_time = time.time()
     result = chain.invoke({"context": context, "question": question})
     elapsed_time = time.time() - start_time
-    print(result.content)
-    print(f"\n\nResponse time: {elapsed_time:.2f} seconds")
+    
+    return {
+        "response": result.content,
+        "response_time": f"{elapsed_time:.2f}"
+    }
+
+if __name__ == "__main__":
+    import uvicorn
+    uvicorn.run(app, host="0.0.0.0", port=8000)
 

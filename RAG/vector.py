@@ -1,4 +1,3 @@
-from langchain_ollama import OllamaEmbeddings
 from langchain_google_genai import GoogleGenerativeAIEmbeddings
 from langchain_chroma import Chroma
 from langchain_core.documents import Document
@@ -7,14 +6,13 @@ import os
 import json
 import time
 from config import (
-    EMBEDDING_MODEL, VECTOR_DB_PATH, COLLECTION_NAME,
+    VECTOR_DB_PATH, COLLECTION_NAME,
     CHUNK_SIZE, CHUNK_OVERLAP, RETRIEVAL_K,
     QA_FILE, STRUCTURE_FILE
 )
 
 # Initialize embeddings and text splitter
-# embeddings = OllamaEmbeddings(model=EMBEDDING_MODEL)
-embeddings = GoogleGenerativeAIEmbeddings(model="models/gemini-embedding-001")
+embeddings = GoogleGenerativeAIEmbeddings(model="models/embedding-001")
 # vector = embeddings.embed_query("Hello world")
 # print(vector[:5])
 

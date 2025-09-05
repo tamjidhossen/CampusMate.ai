@@ -1,5 +1,10 @@
-langchain
-langchain_google_genai
-# langchain-ollama
-langchain-chroma
+fastapi
+uvicorn
 python-dotenv
+langchain-google-genai
+langchain-core
+langchain-chroma
+langchain-text-splitters
+langchain
+requests
+bs4

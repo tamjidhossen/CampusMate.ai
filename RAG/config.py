@@ -14,8 +14,7 @@ else:
     print("LangSmith tracing disabled")
 
 # Model configurations
-EMBEDDING_MODEL = "nomic-embed-text"
-LLM_MODEL = "gemma3"
+LLM_MODEL = "gemini-1.5-flash"
 
 # Vector store configuration
 VECTOR_DB_PATH = "./chroma_langchain_db"
