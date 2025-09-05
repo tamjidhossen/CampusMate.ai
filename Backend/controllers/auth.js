@@ -4,6 +4,7 @@ const User = require('../models/User');
 const asyncHandler = require('../utils/asyncHandler');
 const ErrorResponse = require('../utils/errorResponse');
 const sendEmail = require('../utils/sendEmail');
+const { deleteFile, getFilePathFromUrl } = require('../utils/fileUpload');
 
 // Generate JWT Token
 const signToken = (id) => {
@@ -54,10 +55,11 @@ const createTokenResponse = (user, statusCode, res) => {
         residence: user.residence,
         bloodGroup: user.bloodGroup,
         role: user.role,
+        session: user.session,
+        profilePicture: user.profilePicture,
         isVolunteer: user.isVolunteer,
         isVerified: user.isVerified,
-        volunteerStats: user.volunteerStats,
-        createdAt: user.createdAt
+        volunteerStats: user.volunteerStats
       }
     });
 };
@@ -179,6 +181,8 @@ exports.getMe = asyncHandler(async (req, res, next) => {
       residence: user.residence,
       bloodGroup: user.bloodGroup,
       role: user.role,
+      session: user.session,
+      profilePicture: user.profilePicture,
       isVolunteer: user.isVolunteer,
       isVerified: user.isVerified,
       volunteerStats: user.volunteerStats,
@@ -198,8 +202,24 @@ exports.updateProfile = asyncHandler(async (req, res, next) => {
     department: req.body.department,
     residence: req.body.residence,
     bloodGroup: req.body.bloodGroup,
-    isVolunteer: req.body.isVolunteer
+    isVolunteer: req.body.isVolunteer,
+    session: req.body.session
   };
+
+  // Handle profile picture upload
+  if (req.file) {
+    // Get the current user to check for existing profile picture
+    const currentUser = await User.findById(req.user.id);
+    
+    // Delete old profile picture if it exists
+    if (currentUser.profilePicture) {
+      const oldFilePath = getFilePathFromUrl(currentUser.profilePicture);
+      deleteFile(oldFilePath);
+    }
+    
+    // Set new profile picture path
+    fieldsToUpdate.profilePicture = `/uploads/profile-pictures/${req.file.filename}`;
+  }
 
   // Remove undefined fields
   Object.keys(fieldsToUpdate).forEach(key => 
@@ -223,6 +243,8 @@ exports.updateProfile = asyncHandler(async (req, res, next) => {
       residence: user.residence,
       bloodGroup: user.bloodGroup,
       role: user.role,
+      session: user.session,
+      profilePicture: user.profilePicture,
       isVolunteer: user.isVolunteer,
       isVerified: user.isVerified,
       volunteerStats: user.volunteerStats,

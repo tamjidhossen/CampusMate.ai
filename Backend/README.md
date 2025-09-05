@@ -111,6 +111,7 @@ Backend/
 | POST | `/logout` | User logout | Public |
 | GET | `/me` | Get current user | Private |
 | PUT | `/update-profile` | Update user profile | Private |
+| DELETE | `/profile-picture` | Delete profile picture | Private |
 | PUT | `/change-password` | Change password | Private |
 | POST | `/forgot-password` | Request password reset | Public |
 | PUT | `/reset-password/:token` | Reset password | Public |
@@ -256,6 +257,8 @@ The system automatically creates a default admin account:
   residence: String,      // Residential address
   bloodGroup: String,     // Blood type (A+, A-, B+, B-, AB+, AB-, O+, O-)
   role: String,          // student, teacher, admin
+  session: String,       // Academic session (required for students only)
+  profilePicture: String, // Profile picture URL (optional)
   isVolunteer: Boolean,  // Volunteer opt-in status
   isVerified: Boolean,   // Admin verification status
   volunteerStats: {      // Volunteer performance metrics
@@ -269,6 +272,21 @@ The system automatically creates a default admin account:
   updatedAt: Date
 }
 ```
+
+### Session Management
+- **Required for Students**: Academic session is mandatory for student registration
+- **Valid Sessions**: 2024-25, 2023-24, 2022-23, 2021-22, 2020-21, 2019-20, 2018-19, 2017-18
+- **Optional for Teachers**: Teachers don't need session information
+- **Validation**: Automatic validation ensures only valid sessions are accepted
+
+### Profile Picture Management
+- **Optional Field**: Profile pictures are optional for all users
+- **File Upload**: Supports image uploads via multipart/form-data
+- **File Validation**: Only image files allowed (JPEG, PNG, GIF, WebP)
+- **Size Limit**: Maximum file size of 5MB
+- **Storage**: Files stored in `/uploads/profile-pictures/` directory
+- **URL Format**: Stored as `/uploads/profile-pictures/filename.ext`
+- **Deletion**: Automatic cleanup of old files when updated or deleted
 
 ### Notice Model (Advanced Targeting)
 ```javascript
@@ -378,32 +396,81 @@ The system automatically creates a default admin account:
 ### Departments (25 Official Departments)
 ```javascript
 [
-  "Computer Science and Engineering",
-  "Electrical and Electronic Engineering", 
-  "Electronics and Communication Engineering",
-  "Civil Engineering",
-  "Mechanical Engineering",
-  "Industrial and Production Engineering",
-  "Chemical Engineering",
-  "Architecture",
-  "Urban and Regional Planning",
-  "Mathematics",
-  "Physics",
-  "Chemistry",
-  "Statistics",
-  "Economics",
-  "Management Studies",
-  "Marketing",
-  "Finance and Banking",
-  "Accounting and Information Systems",
-  "English",
-  "Bangla",
-  "History",
-  "Islamic Studies",
-  "Philosophy",
-  "Public Administration",
-  "Law and Justice"
+        // Faculty of Arts and Humanities
+        'Bangla Language and Literature',
+        'English Language and Literature',
+        'Music',
+        'Theatre and Performance Studies',
+        'Film and Media Studies',
+        'Philosophy',
+        'History',
+        'Fine Arts',
+        
+        // Faculty of Science and Engineering
+        'Computer Science and Engineering',
+        'Electrical and Electronic Engineering',
+        'Environmental Science and Engineering',
+        'Statistics',
+        
+        // Faculty of Social Sciences
+        'Economics',
+        'Public Administration and Governance Studies',
+        'Folklore',
+        'Anthropology',
+        'Population Science',
+        'Local Government and Urban Development',
+        'Sociology',
+        
+        // Faculty of Business Studies
+        'Accounting and Information Systems',
+        'Finance and Banking',
+        'Human Resource Management',
+        'Management',
+        'Marketing',
+        
+        // Faculty of Law
+        'Law and Justice',
+        
+        // Other
+        'Administration',
+        'Other'
 ]
+```
+
+### 📂 File Upload Examples
+
+#### Profile Picture Upload
+```javascript
+// Frontend - HTML Form
+<form enctype="multipart/form-data">
+  <input type="file" name="profilePicture" accept="image/*" />
+  <input type="text" name="name" value="John Doe" />
+  <input type="submit" value="Update Profile" />
+</form>
+
+// Frontend - JavaScript Fetch
+const formData = new FormData();
+formData.append('profilePicture', fileInput.files[0]);
+formData.append('name', 'John Doe');
+
+fetch('/api/auth/update-profile', {
+  method: 'PUT',
+  body: formData,
+  headers: {
+    'Authorization': `Bearer ${token}`
+  }
+});
+```
+
+#### Profile Picture Deletion
+```javascript
+// Delete profile picture
+fetch('/api/auth/profile-picture', {
+  method: 'DELETE',
+  headers: {
+    'Authorization': `Bearer ${token}`
+  }
+});
 ```
 
 ## Notice System Features

@@ -10,10 +10,12 @@ describe('Auth Endpoints', () => {
         email: 'john@example.com',
         password: 'Password123',
         phone: '+1-234-567-8900',
-        department: 'Computer Science',
+        department: 'Computer Science and Engineering',
         residence: '123 Campus Drive',
         bloodGroup: 'O+',
-        role: 'student'
+        role: 'student',
+        session: '2024-25',
+        session: '2024-25'
       };
 
       const response = await request(app)
@@ -33,7 +35,7 @@ describe('Auth Endpoints', () => {
         email: 'invalid-email',
         password: 'Password123',
         phone: '+1-234-567-8900',
-        department: 'Computer Science',
+        department: 'Computer Science and Engineering',
         residence: '123 Campus Drive',
         bloodGroup: 'O+'
       };
@@ -53,7 +55,7 @@ describe('Auth Endpoints', () => {
         email: 'john@example.com',
         password: '123', // Too weak
         phone: '+1-234-567-8900',
-        department: 'Computer Science',
+        department: 'Computer Science and Engineering',
         residence: '123 Campus Drive',
         bloodGroup: 'O+'
       };
@@ -72,7 +74,7 @@ describe('Auth Endpoints', () => {
         email: 'john@example.com',
         password: 'Password123',
         phone: '+1-234-567-8900',
-        department: 'Computer Science',
+        department: 'Computer Science and Engineering',
         residence: '123 Campus Drive',
         bloodGroup: 'O+'
       };
@@ -103,7 +105,7 @@ describe('Auth Endpoints', () => {
         email: 'verified@example.com',
         password: 'Password123',
         phone: '+1-234-567-8900',
-        department: 'Computer Science',
+        department: 'Computer Science and Engineering',
         residence: '123 Campus Drive',
         bloodGroup: 'O+',
         isVerified: true
@@ -115,7 +117,7 @@ describe('Auth Endpoints', () => {
         email: 'unverified@example.com',
         password: 'Password123',
         phone: '+1-234-567-8901',
-        department: 'Computer Science',
+        department: 'Computer Science and Engineering',
         residence: '123 Campus Drive',
         bloodGroup: 'A+',
         isVerified: false
@@ -201,7 +203,7 @@ describe('Auth Endpoints', () => {
         email: 'test@example.com',
         password: 'Password123',
         phone: '+1-234-567-8900',
-        department: 'Computer Science',
+        department: 'Computer Science and Engineering',
         residence: '123 Campus Drive',
         bloodGroup: 'O+',
         isVerified: true
@@ -259,7 +261,7 @@ describe('Auth Endpoints', () => {
         email: 'test@example.com',
         password: 'Password123',
         phone: '+1-234-567-8900',
-        department: 'Computer Science',
+        department: 'Computer Science and Engineering',
         residence: '123 Campus Drive',
         bloodGroup: 'O+',
         isVerified: true
@@ -326,7 +328,7 @@ describe('Auth Endpoints', () => {
         email: 'test@example.com',
         password: 'Password123',
         phone: '+1-234-567-8900',
-        department: 'Computer Science',
+        department: 'Computer Science and Engineering',
         residence: '123 Campus Drive',
         bloodGroup: 'O+',
         isVerified: true

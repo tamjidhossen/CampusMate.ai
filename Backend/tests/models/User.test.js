@@ -13,10 +13,11 @@ describe('User Model Tests', () => {
         email: 'john@example.com',
         password: 'Password123',
         phone: '+1-234-567-8900',
-        department: 'Computer Science',
+        department: 'Computer Science and Engineering',
         residence: '123 Campus Drive',
         bloodGroup: 'O+',
-        role: 'student'
+        role: 'student',
+        session: '2024-25'
       };
 
       const user = new User(userData);
@@ -50,9 +51,10 @@ describe('User Model Tests', () => {
         email: 'invalid-email',
         password: 'Password123',
         phone: '+1-234-567-8900',
-        department: 'Computer Science',
+        department: 'Computer Science and Engineering',
         residence: '123 Campus Drive',
-        bloodGroup: 'O+'
+        bloodGroup: 'O+',
+        session: '2024-25'
       };
 
       const user = new User(userData);
@@ -66,9 +68,10 @@ describe('User Model Tests', () => {
         email: 'john@example.com',
         password: 'Password123',
         phone: '+1-234-567-8900',
-        department: 'Computer Science',
+        department: 'Computer Science and Engineering',
         residence: '123 Campus Drive',
-        bloodGroup: 'Invalid' // Invalid blood group
+        bloodGroup: 'Invalid', // Invalid blood group
+        session: '2024-25'
       };
 
       const user = new User(userData);
@@ -82,9 +85,10 @@ describe('User Model Tests', () => {
         email: 'john@example.com',
         password: 'Password123',
         phone: '+1-234-567-8900',
-        department: 'Computer Science',
+        department: 'Computer Science and Engineering',
         residence: '123 Campus Drive',
-        bloodGroup: 'O+'
+        bloodGroup: 'O+',
+        session: '2024-25'
       };
 
       const user1 = new User(userData);
@@ -93,6 +97,124 @@ describe('User Model Tests', () => {
       const user2 = new User({ ...userData, name: 'Jane Doe' });
       
       await expect(user2.save()).rejects.toThrow();
+    });
+
+    it('should require session for student users', async () => {
+      const userData = {
+        name: 'John Doe',
+        email: 'john@example.com',
+        password: 'Password123',
+        phone: '+1-234-567-8900',
+        department: 'Computer Science and Engineering',
+        residence: '123 Campus Drive',
+        bloodGroup: 'O+',
+        role: 'student'
+        // Missing session field
+      };
+
+      const user = new User(userData);
+      
+      await expect(user.save()).rejects.toThrow();
+    });
+
+    it('should not require session for teacher users', async () => {
+      const userData = {
+        name: 'John Teacher',
+        email: 'john.teacher@example.com',
+        password: 'Password123',
+        phone: '+1-234-567-8900',
+        department: 'Computer Science and Engineering',
+        residence: '123 Campus Drive',
+        bloodGroup: 'O+',
+        role: 'teacher'
+        // No session field required for teachers
+      };
+
+      const user = new User(userData);
+      const savedUser = await user.save();
+      
+      expect(savedUser._id).toBeDefined();
+      expect(savedUser.role).toBe('teacher');
+      expect(savedUser.session).toBeUndefined();
+    });
+
+    it('should validate session values for students', async () => {
+      const userData = {
+        name: 'John Doe',
+        email: 'john@example.com',
+        password: 'Password123',
+        phone: '+1-234-567-8900',
+        department: 'Computer Science and Engineering',
+        residence: '123 Campus Drive',
+        bloodGroup: 'O+',
+        role: 'student',
+        session: 'invalid-session'
+      };
+
+      const user = new User(userData);
+      
+      await expect(user.save()).rejects.toThrow();
+    });
+
+    it('should accept valid profile picture URL', async () => {
+      const userData = {
+        name: 'John Student',
+        email: 'john.student@example.com',
+        password: 'Password123',
+        phone: '+1-234-567-8900',
+        department: 'Computer Science and Engineering',
+        residence: '123 Campus Drive',
+        bloodGroup: 'O+',
+        role: 'student',
+        session: '2024-25',
+        profilePicture: '/uploads/profile-pictures/test-image.jpg'
+      };
+
+      const user = new User(userData);
+      const savedUser = await user.save();
+      
+      expect(savedUser._id).toBeDefined();
+      expect(savedUser.profilePicture).toBe('/uploads/profile-pictures/test-image.jpg');
+    });
+
+    it('should accept null profile picture', async () => {
+      const userData = {
+        name: 'John Student',
+        email: 'john.student2@example.com',
+        password: 'Password123',
+        phone: '+1-234-567-8900',
+        department: 'Computer Science and Engineering',
+        residence: '123 Campus Drive',
+        bloodGroup: 'A+',
+        role: 'student',
+        session: '2024-25',
+        profilePicture: null
+      };
+
+      const user = new User(userData);
+      const savedUser = await user.save();
+      
+      expect(savedUser._id).toBeDefined();
+      expect(savedUser.profilePicture).toBeNull();
+    });
+
+    it('should reject invalid profile picture URL', async () => {
+      const userData = {
+        name: 'John Student',
+        email: 'john.student3@example.com',
+        password: 'Password123',
+        phone: '+1-234-567-8900',
+        department: 'Computer Science and Engineering',
+        residence: '123 Campus Drive',
+        bloodGroup: 'B+',
+        role: 'student',
+        session: '2024-25',
+        profilePicture: 'invalid-url'
+      };
+
+      const user = new User(userData);
+      
+      await expect(user.save()).rejects.toThrow();
     });
   });
 
@@ -105,9 +227,11 @@ describe('User Model Tests', () => {
         email: 'john@example.com',
         password: 'Password123',
         phone: '+1-234-567-8900',
-        department: 'Computer Science',
+        department: 'Computer Science and Engineering',
         residence: '123 Campus Drive',
-        bloodGroup: 'O+'
+        bloodGroup: 'O+',
+        role: 'student',
+        session: '2024-25'
       });
       await user.save();
     });
@@ -164,10 +288,11 @@ describe('User Model Tests', () => {
         email: 'john@example.com',
         password: 'Password123',
         phone: '+1-234-567-8900',
-        department: 'Computer Science',
+        department: 'Computer Science and Engineering',
         residence: '123 Campus Drive',
         bloodGroup: 'O+',
-        role: 'invalid_role'
+        role: 'invalid_role',
+        session: '2024-25'
       };
 
       const user = new User(userData);
@@ -181,9 +306,10 @@ describe('User Model Tests', () => {
         email: 'john@example.com',
         password: 'Password123',
         phone: 'invalid-phone',
-        department: 'Computer Science',
+        department: 'Computer Science and Engineering',
         residence: '123 Campus Drive',
-        bloodGroup: 'O+'
+        bloodGroup: 'O+',
+        session: '2024-25'
       };
 
       const user = new User(userData);

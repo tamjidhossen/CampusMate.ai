@@ -13,6 +13,7 @@ const {
 } = require('../controllers/auth');
 const { protect } = require('../middleware/auth');
 const { validate } = require('../middleware/validation');
+const { uploadProfilePicture, handleUploadError } = require('../utils/fileUpload');
 
 const router = express.Router();
 
@@ -90,7 +91,20 @@ const registerValidation = [
   body('role')
     .optional()
     .isIn(['student', 'teacher'])
-    .withMessage('Role must be either student or teacher')
+    .withMessage('Role must be either student or teacher'),
+  body('session')
+    .custom((value, { req }) => {
+      // If role is student, session is required
+      if (req.body.role === 'student' || (!req.body.role && req.body.email && req.body.email.includes('@student'))) {
+        if (!value) {
+          throw new Error('Session is required for students');
+        }
+        if (!['2024-25', '2023-24', '2022-23', '2021-22', '2020-21', '2019-20', '2018-19', '2017-18'].includes(value)) {
+          throw new Error('Please select a valid session');
+        }
+      }
+      return true;
+    })
 ];
 
 const loginValidation = [
@@ -166,7 +180,29 @@ const updateProfileValidation = [
   body('isVolunteer')
     .optional()
     .isBoolean()
-    .withMessage('isVolunteer must be a boolean value')
+    .withMessage('isVolunteer must be a boolean value'),
+  body('session')
+    .optional()
+    .custom((value, { req }) => {
+      // If role is student, session is required
+      if (req.body.role === 'student') {
+        if (!value) {
+          throw new Error('Session is required for students');
+        }
+        if (!['2024-25', '2023-24', '2022-23', '2021-22', '2020-21', '2019-20', '2018-19', '2017-18'].includes(value)) {
+          throw new Error('Please select a valid session');
+        }
+      }
+      return true;
+    }),
+  // Profile picture validation (handled by multer middleware, but we can add custom validation here if needed)
+  body('profilePicture')
+    .optional()
+    .custom((value, { req }) => {
+      // Additional validation can be added here if needed
+      // The file validation is primarily handled by multer
+      return true;
+    })
 ];
 
 const changePasswordValidation = [
@@ -202,7 +238,46 @@ router.put('/reset-password/:resettoken',
 
 // Protected routes
 router.get('/me', protect, getMe);
-router.put('/update-profile', protect, updateProfileValidation, validate, updateProfile);
+router.put('/update-profile', 
+  protect, 
+  uploadProfilePicture, 
+  handleUploadError,
+  updateProfileValidation, 
+  validate, 
+  updateProfile
+);
 router.put('/change-password', protect, changePasswordValidation, validate, changePassword);
+
+// Profile picture routes
+router.delete('/profile-picture', protect, async (req, res, next) => {
+  try {
+    const { deleteFile, getFilePathFromUrl } = require('../utils/fileUpload');
+    const User = require('../models/User');
+    
+    const user = await User.findById(req.user.id);
+    
+    if (!user.profilePicture) {
+      return res.status(400).json({
+        success: false,
+        message: 'No profile picture to delete'
+      });
+    }
+    
+    // Delete the file
+    const filePath = getFilePathFromUrl(user.profilePicture);
+    deleteFile(filePath);
+    
+    // Remove from database
+    user.profilePicture = null;
+    await user.save();
+    
+    res.status(200).json({
+      success: true,
+      message: 'Profile picture deleted successfully'
+    });
+  } catch (error) {
+    next(error);
+  }
+});
 
 module.exports = router;

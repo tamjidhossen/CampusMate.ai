@@ -91,8 +91,30 @@ const userSchema = new mongoose.Schema({
   },
   role: {
     type: String,
-    enum: ['student', 'teacher', 'admin'],
+    enum: ['student', 'teacher', 'admin','staff'],
     default: 'student'
+  },
+  session: {
+    type: String,
+    enum: {
+      values: ['2024-25', '2023-24', '2022-23', '2021-22', '2020-21', '2019-20', '2018-19', '2017-18'],
+      message: 'Please select a valid session'
+    },
+    required: function() {
+      return this.role === 'student';
+    }
+  },
+  profilePicture: {
+    type: String,
+    default: null,
+    validate: {
+      validator: function(v) {
+        // If provided, should be a valid URL or file path
+        if (v === null || v === '') return true;
+        return /^(https?:\/\/)|(\/uploads\/)/.test(v);
+      },
+      message: 'Profile picture must be a valid URL or file path'
+    }
   },
   isVolunteer: {
     type: Boolean,
@@ -124,10 +146,6 @@ const userSchema = new mongoose.Schema({
       default: 0,
       min: 0,
       max: 5
-    },
-    totalRatings: {
-      type: Number,
-      default: 0
     }
   },
   lastActive: {
@@ -144,6 +162,7 @@ userSchema.index({ isVerified: 1 });
 userSchema.index({ isVolunteer: 1 });
 userSchema.index({ department: 1 });
 userSchema.index({ role: 1 });
+userSchema.index({ session: 1 });
 
 // Encrypt password before saving
 userSchema.pre('save', async function(next) {

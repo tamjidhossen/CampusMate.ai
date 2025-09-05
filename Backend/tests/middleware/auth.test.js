@@ -20,10 +20,11 @@ describe('Authentication Middleware', () => {
       email: 'verified@example.com',
       password: 'Password123',
       phone: '+1-234-567-8900',
-      department: 'Computer Science',
+      department: 'Computer Science and Engineering',
       residence: '123 Campus Drive',
       bloodGroup: 'O+',
       role: 'student',
+        session: '2024-25',
       isVerified: true
     });
 
@@ -32,10 +33,11 @@ describe('Authentication Middleware', () => {
       email: 'unverified@example.com',
       password: 'Password123',
       phone: '+1-234-567-8901',
-      department: 'Computer Science',
+      department: 'Computer Science and Engineering',
       residence: '123 Campus Drive',
       bloodGroup: 'A+',
       role: 'student',
+        session: '2024-25',
       isVerified: false
     });
 
@@ -60,6 +62,7 @@ describe('Authentication Middleware', () => {
       residence: '123 Campus Drive',
       bloodGroup: 'AB+',
       role: 'student',
+        session: '2024-25',
       isVolunteer: true,
       isVerified: true
     });
