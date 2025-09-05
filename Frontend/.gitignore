@@ -26,3 +26,4 @@ dist-ssr
 # Hackathon documentation
 campusmate.ai hackathon writeup.md
 
+.env
