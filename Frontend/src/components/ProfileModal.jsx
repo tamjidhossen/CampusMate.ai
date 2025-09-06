@@ -52,12 +52,6 @@ const ProfileModal = ({ isOpen, onClose }) => {
   const [isLoading, setIsLoading] = useState(false);
   const [validationErrors, setValidationErrors] = useState({});
 
-  useEffect(() => {
-    if (isOpen && user) {
-      loadProfileData();
-    }
-  }, [isOpen, user, loadProfileData]);
-
   const loadProfileData = useCallback(() => {
     try {
       setIsLoading(true);
@@ -81,6 +75,12 @@ const ProfileModal = ({ isOpen, onClose }) => {
       setIsLoading(false);
     }
   }, [user]);
+
+  useEffect(() => {
+    if (isOpen && user) {
+      loadProfileData();
+    }
+  }, [isOpen, user, loadProfileData]);
 
   const handleClose = () => {
     if (isEditMode) {
