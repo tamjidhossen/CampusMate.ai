@@ -53,6 +53,14 @@ const ProfileModal = ({ isOpen, onClose }) => {
   const loadProfileData = useCallback(() => {
     try {
       setIsLoading(true);
+
+      // Construct profile picture URL using proxy path if exists
+      const profilePictureUrl = user?.profilePicture
+        ? user.profilePicture.startsWith("http")
+          ? user.profilePicture
+          : user.profilePicture // Use the path as-is, Vite will proxy it
+        : null;
+
       // Load user data from auth context
       setProfileData({
         name: user?.name || "",
@@ -64,7 +72,7 @@ const ProfileModal = ({ isOpen, onClose }) => {
         role: user?.role || "",
         session: user?.session || "",
         isVolunteer: user?.isVolunteer || false,
-        profilePicture: user?.profilePicture || null,
+        profilePicture: profilePictureUrl,
       });
     } catch (error) {
       console.error("Error loading profile data:", error);
@@ -279,13 +287,74 @@ const ProfileModal = ({ isOpen, onClose }) => {
   const handleProfilePictureChange = (e) => {
     const file = e.target.files[0];
     if (file) {
-      // Store the actual file for upload
-      handleInputChange("profilePicture", file);
+      // Check file size (limit to 2MB)
+      if (file.size > 2 * 1024 * 1024) {
+        toast.error("Image size must be less than 2MB");
+        return;
+      }
 
-      // Create preview URL for display
+      // Check file type
+      if (!file.type.startsWith("image/")) {
+        toast.error("Please select a valid image file");
+        return;
+      }
+
+      // Compress and resize image
+      const canvas = document.createElement("canvas");
+      const ctx = canvas.getContext("2d");
+      const img = new Image();
+
+      img.onload = () => {
+        // Calculate new dimensions (max 300x300)
+        let { width, height } = img;
+        const maxSize = 300;
+
+        if (width > height) {
+          if (width > maxSize) {
+            height = (height * maxSize) / width;
+            width = maxSize;
+          }
+        } else {
+          if (height > maxSize) {
+            width = (width * maxSize) / height;
+            height = maxSize;
+          }
+        }
+
+        canvas.width = width;
+        canvas.height = height;
+
+        // Draw and compress
+        ctx.drawImage(img, 0, 0, width, height);
+        canvas.toBlob(
+          (compressedBlob) => {
+            if (compressedBlob) {
+              // Create a proper File object from the compressed blob
+              const compressedFile = new File(
+                [compressedBlob],
+                `profile_${Date.now()}.jpg`,
+                { type: "image/jpeg" }
+              );
+
+              // Store the compressed file for upload
+              handleInputChange("profilePicture", compressedFile);
+
+              // Create preview URL for display
+              const reader = new FileReader();
+              reader.onload = (e) => {
+                handleInputChange("profilePicturePreview", e.target.result);
+              };
+              reader.readAsDataURL(compressedFile);
+            }
+          },
+          "image/jpeg",
+          0.7
+        ); // 70% quality
+      };
+
       const reader = new FileReader();
       reader.onload = (e) => {
-        handleInputChange("profilePicturePreview", e.target.result);
+        img.src = e.target.result;
       };
       reader.readAsDataURL(file);
     }
@@ -336,15 +405,13 @@ const ProfileModal = ({ isOpen, onClose }) => {
                         <div className="w-full h-full rounded-full bg-gray-900 flex items-center justify-center backdrop-blur-sm">
                           {(
                             isEditMode
-                              ? tempData.profilePicturePreview ||
-                                tempData.profilePicture
+                              ? tempData.profilePicturePreview
                               : profileData.profilePicture
                           ) ? (
                             <img
                               src={
                                 isEditMode
-                                  ? tempData.profilePicturePreview ||
-                                    tempData.profilePicture
+                                  ? tempData.profilePicturePreview
                                   : profileData.profilePicture
                               }
                               alt="Profile"

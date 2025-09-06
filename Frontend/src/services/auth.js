@@ -195,8 +195,14 @@ export async function updateProfile(profileData) {
   Object.keys(cleanedData).forEach((key) => {
     const value = cleanedData[key];
     if (key === "profilePicture" && value instanceof File) {
+      console.log(
+        "Adding profile picture to FormData:",
+        value.name,
+        value.size,
+        value.type
+      );
       formData.append("profilePicture", value);
-    } else if (key !== "profilePicture") {
+    } else if (key !== "profilePicture" && key !== "profilePicturePreview") {
       formData.append(key, value);
     }
   });
