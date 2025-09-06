@@ -16,6 +16,7 @@ import {
 } from "lucide-react";
 import { useAuth } from "../../hooks/useAuth";
 import * as helpRequestService from "../../services/helpRequest";
+import AvatarCircles from "../ui/avatar-circles";
 
 const HelpRequestSection = () => {
   const { user, isAuthenticated } = useAuth();
@@ -331,6 +332,8 @@ const HelpRequestSection = () => {
           scrollbarColor: "#374151 transparent",
         }}
       >
+
+
         {isLoading ? (
           <div className="text-center py-12">
             <Loader2 className="w-8 h-8 text-orange-400 animate-spin mx-auto mb-4" />
@@ -421,33 +424,23 @@ const HelpRequestSection = () => {
             )}
 
             {/* Responses */}
-            {request.responses.length > 0 && (
+            {request.responses && request.responses.length > 0 && (
               <div className="mb-4">
-                <div className="flex items-center space-x-2 mb-2">
-                  <MessageCircle className="w-4 h-4 text-gray-400" />
-                  <span className="text-sm text-gray-400">
-                    {request.responses.length} volunteer(s) responded
-                  </span>
-                </div>
-                <div className="flex -space-x-2">
-                  {request.responses.map((response) => (
-                    <div key={response.id} className="relative group">
-                      <img
-                        src={response.volunteer.profilePic}
-                        alt={response.volunteer.name}
-                        className="w-8 h-8 rounded-full border-2 border-gray-800 hover:border-orange-500 transition-colors cursor-pointer"
-                      />
-                      {/* Tooltip */}
-                      <div className="absolute bottom-10 left-1/2 transform -translate-x-1/2 bg-gray-900 border border-gray-700 rounded-lg p-2 text-xs text-white opacity-0 group-hover:opacity-100 transition-opacity pointer-events-none z-10 whitespace-nowrap">
-                        <div className="font-medium">
-                          {response.volunteer.name}
-                        </div>
-                        <div className="text-gray-400">
-                          {response.volunteer.department}
-                        </div>
-                      </div>
-                    </div>
-                  ))}
+                <div className="flex items-center justify-between mb-3">
+                  <div className="flex items-center space-x-2">
+                    <MessageCircle className="w-4 h-4 text-gray-400" />
+                    <span className="text-sm text-gray-400">
+                      {request.responses.length} volunteer(s) responded
+                    </span>
+                  </div>
+                  <AvatarCircles
+                    avatarUrls={request.responses.map(r => ({
+                      url: r.volunteer?.profilePicture || r.volunteer?.profilePic,
+                      name: r.volunteer?.name
+                    }))}
+                    numPeople={request.responses.length}
+                    className="flex-shrink-0"
+                  />
                 </div>
               </div>
             )}
@@ -464,28 +457,61 @@ const HelpRequestSection = () => {
               <div className="flex items-center space-x-2">
                 {request.status === "Active" && (
                   <>
-                    <motion.button
-                      whileHover={{ scale: 1.02 }}
-                      whileTap={{ scale: 0.98 }}
-                      onClick={() => handleRespondToRequest(request)}
-                      className="bg-orange-600 hover:bg-orange-700 text-white px-3 py-1.5 rounded-lg text-sm font-medium transition-colors"
-                    >
-                      Respond to Help Request
-                    </motion.button>
+                    {/* Show respond button for all users except the requester */}
+                    {!(user && request.requester && (request.requester._id === user._id || request.requester.id === user.id)) && (
+                      <>
+                        {/* Check if current user has already responded */}
+                        {!request.responses?.some(r => r.volunteer?._id === user?._id || r.volunteer?.id === user?.id) ? (
+                          <motion.button
+                            whileHover={{ scale: 1.02 }}
+                            whileTap={{ scale: 0.98 }}
+                            onClick={() => handleRespondToRequest(request)}
+                            className="bg-orange-600 hover:bg-orange-700 text-white px-3 py-1.5 rounded-lg text-sm font-medium transition-colors flex items-center space-x-1"
+                          >
+                            <MessageCircle className="w-3 h-3" />
+                            <span>Respond as Volunteer</span>
+                          </motion.button>
+                        ) : (
+                          <div className="flex items-center space-x-1 text-green-400 text-sm">
+                            <CheckCircle className="w-3 h-3" />
+                            <span>You responded</span>
+                          </div>
+                        )}
+                      </>
+                    )}
+                    
+                    {/* Request owner actions */}
                     {user && request.requester && (request.requester._id === user._id || request.requester.id === user.id) && (
-                      <button
-                        onClick={() => markAsCompleted(request._id || request.id)}
-                        className="text-green-400 hover:text-green-300 p-1.5 rounded-lg hover:bg-green-400/10 transition-all duration-200"
-                      >
-                        <CheckCircle className="w-4 h-4" />
-                      </button>
+                      <>
+                        <div className="flex items-center space-x-1 text-blue-400 text-sm">
+                          <User className="w-3 h-3" />
+                          <span>Your request</span>
+                        </div>
+                        <button
+                          onClick={() => markAsCompleted(request._id || request.id)}
+                          className="text-green-400 hover:text-green-300 p-1.5 rounded-lg hover:bg-green-400/10 transition-all duration-200"
+                          title="Mark as completed"
+                        >
+                          <CheckCircle className="w-4 h-4" />
+                        </button>
+                      </>
                     )}
                   </>
                 )}
+                
+                {/* Show a fallback button if status is not Active for debugging */}
+                {request.status !== "Active" && (
+                  <div className="text-gray-500 text-sm">
+                    Status: {request.status}
+                  </div>
+                )}
+                
+                {/* Delete button - only for request owner */}
                 {user && request.requester && (request.requester._id === user._id || request.requester.id === user.id) && (
                   <button
                     onClick={() => deleteRequest(request._id || request.id)}
                     className="text-red-400 hover:text-red-300 p-1.5 rounded-lg hover:bg-red-400/10 transition-all duration-200"
+                    title="Delete request"
                   >
                     <Trash2 className="w-4 h-4" />
                   </button>
@@ -597,7 +623,14 @@ const HelpRequestSection = () => {
                           category: e.target.value,
                         }))
                       }
-                      className="w-full bg-gray-900 border border-gray-600 rounded-lg px-3 py-2 text-white focus:outline-none focus:border-orange-500"
+                      className="w-full bg-gray-900 border border-gray-600 rounded-lg px-3 py-2 text-white focus:outline-none focus:border-orange-500 appearance-none cursor-pointer"
+                      style={{
+                        backgroundImage: `url("data:image/svg+xml,%3csvg xmlns='http://www.w3.org/2000/svg' fill='none' viewBox='0 0 20 20'%3e%3cpath stroke='%236b7280' stroke-linecap='round' stroke-linejoin='round' stroke-width='1.5' d='M6 8l4 4 4-4'/%3e%3c/svg%3e")`,
+                        backgroundPosition: 'right 0.5rem center',
+                        backgroundRepeat: 'no-repeat',
+                        backgroundSize: '1.5em 1.5em',
+                        paddingRight: '2.5rem'
+                      }}
                     >
                       {categories.map((category) => (
                         <option key={category} value={category}>
@@ -619,7 +652,14 @@ const HelpRequestSection = () => {
                           urgency: e.target.value,
                         }))
                       }
-                      className="w-full bg-gray-900 border border-gray-600 rounded-lg px-3 py-2 text-white focus:outline-none focus:border-orange-500"
+                      className="w-full bg-gray-900 border border-gray-600 rounded-lg px-3 py-2 text-white focus:outline-none focus:border-orange-500 appearance-none cursor-pointer"
+                      style={{
+                        backgroundImage: `url("data:image/svg+xml,%3csvg xmlns='http://www.w3.org/2000/svg' fill='none' viewBox='0 0 20 20'%3e%3cpath stroke='%236b7280' stroke-linecap='round' stroke-linejoin='round' stroke-width='1.5' d='M6 8l4 4 4-4'/%3e%3c/svg%3e")`,
+                        backgroundPosition: 'right 0.5rem center',
+                        backgroundRepeat: 'no-repeat',
+                        backgroundSize: '1.5em 1.5em',
+                        paddingRight: '2.5rem'
+                      }}
                     >
                       <option value="Low">Low</option>
                       <option value="Medium">Medium</option>
@@ -669,7 +709,7 @@ const HelpRequestSection = () => {
             >
               <div className="flex items-center justify-between mb-6">
                 <h2 className="text-xl font-bold text-white">
-                  Respond to Help Request
+                  Volunteer to Help
                 </h2>
                 <button
                   onClick={() => setShowResponseModal(false)}
@@ -720,7 +760,7 @@ const HelpRequestSection = () => {
                     onClick={confirmResponse}
                     className="flex-1 bg-orange-600 hover:bg-orange-700 text-white py-2 rounded-lg font-medium transition-colors"
                   >
-                    Confirm Response
+                    Volunteer to Help
                   </button>
                 </div>
               </div>
