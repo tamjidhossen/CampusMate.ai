@@ -1,5 +1,4 @@
 import React, { useState, useRef } from "react";
-import { motion } from "motion/react";
 import { Upload, X, FileText, Image, File, Plus, Trash2 } from "lucide-react";
 import { toast } from "sonner";
 import { Button } from "../ui/button";
@@ -63,10 +62,6 @@ const AdminNoticeUpload = () => {
       departments: [],
       bloodGroups: [],
       volunteersOnly: false
-    },
-    deliverySettings: {
-      publishAt: '',
-      expiresAt: ''
     }
   });
 
@@ -146,35 +141,12 @@ const AdminNoticeUpload = () => {
     return <FileText className="w-4 h-4" />;
   };
 
-  const validateForm = () => {
-    const newErrors = {};
-    
-    if (!formData.title.trim()) newErrors.title = 'Title is required';
-    if (!formData.content.trim()) newErrors.content = 'Content is required';
-    if (!formData.category) newErrors.category = 'Category is required';
-    
-    // Validate targeting - at least one criteria must be specified
-    const hasTargeting = formData.targeting.roles.length > 0 || 
-                        formData.targeting.departments.length > 0 || 
-                        formData.targeting.bloodGroups.length > 0 || 
-                        formData.targeting.volunteersOnly;
-    
-    if (!hasTargeting) {
-      newErrors.targeting = 'At least one targeting criteria must be specified';
-    }
-
-    setErrors(newErrors);
-    return Object.keys(newErrors).length === 0;
-  };
-
   const handleSubmit = async (e) => {
     e.preventDefault();
     
-    if (!validateForm()) {
-      toast.error('Please fix the form errors before submitting');
-      return;
-    }
-
+    // No form validation required - all fields are optional
+    // Backend will handle any necessary validation
+    
     setIsSubmitting(true);
     
     try {
@@ -199,10 +171,6 @@ const AdminNoticeUpload = () => {
           departments: [],
           bloodGroups: [],
           volunteersOnly: false
-        },
-        deliverySettings: {
-          publishAt: '',
-          expiresAt: ''
         }
       });
       setAttachments([]);
@@ -231,22 +199,22 @@ const AdminNoticeUpload = () => {
             {/* Basic Information */}
             <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
               <FormItem>
-                <FormLabel>Title *</FormLabel>
+                <FormLabel>Title</FormLabel>
                 <Input
                   name="title"
                   value={formData.title}
                   onChange={handleInputChange}
-                  placeholder="Enter notice title"
+                  placeholder="Enter notice title (optional)"
                   maxLength={200}
                 />
                 {errors.title && <FormMessage>{errors.title}</FormMessage>}
               </FormItem>
 
               <FormItem>
-                <FormLabel>Category *</FormLabel>
+                <FormLabel>Category</FormLabel>
                 <Select value={formData.category} onValueChange={(value) => setFormData(prev => ({ ...prev, category: value }))}>
                   <SelectTrigger>
-                    <SelectValue placeholder="Select category" />
+                    <SelectValue placeholder="Select category (optional)" />
                   </SelectTrigger>
                   <SelectContent>
                     {NOTICE_CATEGORIES.map(category => (
@@ -288,12 +256,12 @@ const AdminNoticeUpload = () => {
 
             {/* Content */}
             <FormItem>
-              <FormLabel>Content *</FormLabel>
+              <FormLabel>Content</FormLabel>
               <Textarea
                 name="content"
                 value={formData.content}
                 onChange={handleInputChange}
-                placeholder="Enter notice content"
+                placeholder="Enter notice content (optional)"
                 rows={6}
                 maxLength={5000}
               />
@@ -305,7 +273,7 @@ const AdminNoticeUpload = () => {
 
             {/* Targeting */}
             <div className="space-y-4">
-              <h3 className="text-lg font-semibold text-white">Targeting *</h3>
+              <h3 className="text-lg font-semibold text-white">Targeting</h3>
               {errors.targeting && <FormMessage>{errors.targeting}</FormMessage>}
               
               <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
@@ -376,33 +344,6 @@ const AdminNoticeUpload = () => {
               </FormItem>
             </div>
 
-            {/* Delivery Settings */}
-            <div className="space-y-4">
-              <h3 className="text-lg font-semibold text-white">Delivery Settings</h3>
-              
-              <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                <FormItem>
-                  <FormLabel>Publish At</FormLabel>
-                  <Input
-                    type="datetime-local"
-                    name="deliverySettings.publishAt"
-                    value={formData.deliverySettings.publishAt}
-                    onChange={handleInputChange}
-                  />
-                </FormItem>
-
-                <FormItem>
-                  <FormLabel>Expires At</FormLabel>
-                  <Input
-                    type="datetime-local"
-                    name="deliverySettings.expiresAt"
-                    value={formData.deliverySettings.expiresAt}
-                    onChange={handleInputChange}
-                  />
-                </FormItem>
-              </div>
-            </div>
-
             {/* File Attachments */}
             <div className="space-y-4">
               <h3 className="text-lg font-semibold text-white">Attachments</h3>
@@ -438,10 +379,8 @@ const AdminNoticeUpload = () => {
                   <h4 className="font-medium text-gray-300">Attached Files ({attachments.length})</h4>
                   <div className="space-y-2">
                     {attachments.map((file, index) => (
-                      <motion.div
+                      <div
                         key={index}
-                        initial={{ opacity: 0, y: 10 }}
-                        animate={{ opacity: 1, y: 0 }}
                         className="flex items-center justify-between p-3 bg-gray-800/50 rounded-lg border border-gray-700"
                       >
                         <div className="flex items-center space-x-3">
@@ -462,7 +401,7 @@ const AdminNoticeUpload = () => {
                         >
                           <Trash2 className="w-4 h-4" />
                         </Button>
-                      </motion.div>
+                      </div>
                     ))}
                   </div>
                 </div>
