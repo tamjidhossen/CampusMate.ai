@@ -11,6 +11,8 @@ import {
   Crown,
   RefreshCw,
   AlertCircle,
+  Phone,
+  Mail,
 } from "lucide-react";
 import { getVolunteerLeaderboard } from "../../services/helpRequest";
 
@@ -27,16 +29,38 @@ const VolunteerLeaderboard = () => {
       setError(null);
       const response = await getVolunteerLeaderboard({ limit: 50 });
       
+      console.log('Leaderboard API response:', response); // Debug log
+      
       // Transform backend data to include calculated points and enhanced info
-      const transformedVolunteers = response.data.map((volunteer, index) => ({
-        ...volunteer,
-        rank: index + 1,
-        points: calculatePoints(volunteer.volunteerStats),
-        profilePicture: volunteer.profilePicture || getDefaultAvatar(volunteer.name),
-        achievements: generateAchievements(volunteer.volunteerStats),
-        joinDate: new Date(volunteer.createdAt || '2024-01-01'),
-        lastActive: new Date(),
-      }));
+      const transformedVolunteers = response.data.map((volunteer, index) => {
+        const stats = volunteer.volunteerStats || {};
+        
+        console.log('Volunteer data:', volunteer.name, {
+          stats,
+          phone: volunteer.phone,
+          email: volunteer.email,
+          department: volunteer.department,
+          profilePicture: volunteer.profilePicture
+        }); // Debug log
+        
+        return {
+          ...volunteer,
+          rank: index + 1,
+          points: calculatePoints(stats),
+          profilePicture: volunteer.profilePicture || getDefaultAvatar(volunteer.name),
+          achievements: generateAchievements(stats),
+          joinDate: new Date(volunteer.createdAt || '2024-01-01'),
+          lastActive: new Date(),
+          // Keep original contact info from backend
+          phone: volunteer.phone,
+          email: volunteer.email,
+          // Also add to contactInfo for backwards compatibility
+          contactInfo: {
+            phone: volunteer.phone || null,
+            email: volunteer.email || null
+          }
+        };
+      });
 
       // Sort by points (highest first)
       transformedVolunteers.sort((a, b) => b.points - a.points);
@@ -55,39 +79,44 @@ const VolunteerLeaderboard = () => {
   }, [fetchLeaderboard]);
 
   const calculatePoints = (stats) => {
-    if (!stats) return 0;
+    if (!stats) return 50; // Give new volunteers some base points
     
-    // Base points for completed requests
-    const completedRequests = stats.requestsFulfilled || 0;
+    // Base points for completed requests (try different field names)
+    const completedRequests = stats.requestsFulfilled || stats.fulfilledRequests || 0;
     const basePoints = completedRequests * 100;
     
-    // Bonus points based on average rating
-    const ratingBonus = (stats.averageRating || 0) * 50;
+    // Bonus points based on average rating (give points even for low ratings)
+    const ratingBonus = Math.max((stats.averageRating || stats.rating || 0) * 50, 25); // Minimum 25 points
+    
+    // Bonus for experience (try different field names for total requests)
+    const totalAccepted = stats.requestsAccepted || stats.totalResponses || stats.totalRequests || 0;
+    const experienceBonus = totalAccepted * 25;
     
     // Bonus for consistency (total responses vs completed)
-    const totalAccepted = stats.requestsAccepted || 0;
     const consistencyRate = totalAccepted > 0 ? (completedRequests / totalAccepted) : 0;
     const consistencyBonus = consistencyRate * 100;
-    
-    // Bonus for experience (more total requests handled)
-    const experienceBonus = totalAccepted * 25;
     
     // Critical request bonus (estimated - could be enhanced with real data later)
     // For now, we'll assume 20% of fulfilled requests are critical and give bonus
     const estimatedCriticalRequests = Math.ceil(completedRequests * 0.2);
     const criticalBonus = estimatedCriticalRequests * 150; // 150 extra points per critical request
     
-    return Math.round(basePoints + ratingBonus + consistencyBonus + experienceBonus + criticalBonus);
+    // Participation bonus for just being a volunteer
+    const participationBonus = 50;
+    
+    const totalPoints = basePoints + ratingBonus + consistencyBonus + experienceBonus + criticalBonus + participationBonus;
+    
+    return Math.max(Math.round(totalPoints), 50); // Minimum 50 points for all volunteers
   };
 
   const generateAchievements = (stats) => {
     const achievements = [];
     
-    if (!stats) return ["New Volunteer"];
+    if (!stats) return ["New Volunteer", "Welcome to the Community"];
     
-    const completed = stats.requestsFulfilled || 0;
-    const accepted = stats.requestsAccepted || 0;
-    const rating = stats.averageRating || 0;
+    const completed = stats.requestsFulfilled || stats.fulfilledRequests || 0;
+    const accepted = stats.requestsAccepted || stats.totalResponses || stats.totalRequests || 0;
+    const rating = stats.averageRating || stats.rating || 0;
     
     // Achievement based on completed requests
     if (completed >= 100) achievements.push("Legendary Volunteer");
@@ -95,31 +124,41 @@ const VolunteerLeaderboard = () => {
     else if (completed >= 25) achievements.push("Active Helper");
     else if (completed >= 10) achievements.push("Community Helper");
     else if (completed >= 5) achievements.push("Helpful Neighbor");
+    else if (completed >= 1) achievements.push("First Helper");
     
     // Achievement based on rating
     if (rating >= 4.9) achievements.push("Perfect Rating");
     else if (rating >= 4.8) achievements.push("5-Star Hero");
     else if (rating >= 4.5) achievements.push("Excellent Service");
     else if (rating >= 4.0) achievements.push("Trusted Volunteer");
+    else if (rating > 0) achievements.push("Rated Helper");
     
     // Achievement based on consistency
-    if (accepted > 0) {
+    if (accepted > 0 && completed > 0) {
       const successRate = (completed / accepted) * 100;
       if (successRate >= 95) achievements.push("Reliable Champion");
       else if (successRate >= 85) achievements.push("Dependable Helper");
+      else if (successRate >= 70) achievements.push("Consistent Helper");
     }
     
     // Achievement based on activity level
     if (accepted >= 200) achievements.push("Super Active");
     else if (accepted >= 100) achievements.push("Quick Responder");
     else if (accepted >= 50) achievements.push("Active Responder");
+    else if (accepted >= 10) achievements.push("Regular Responder");
+    else if (accepted >= 1) achievements.push("First Response");
     
     // Special achievements for categories (can be enhanced later with real data)
     if (completed >= 20) {
       if (Math.random() > 0.7) achievements.push("Emergency Hero"); // Simulated critical request helper
     }
     
-    return achievements.length ? achievements : ["New Volunteer"];
+    // Default achievements for new users
+    if (achievements.length === 0) {
+      achievements.push("New Volunteer", "Ready to Help");
+    }
+    
+    return achievements;
   };
 
   const getDefaultAvatar = (name) => {
@@ -163,14 +202,6 @@ const VolunteerLeaderboard = () => {
       month: "short",
       year: "numeric",
     });
-  };
-
-  const getScoreGrade = (score) => {
-    if (score >= 2500) return { grade: "S", color: "text-yellow-400" };
-    if (score >= 2000) return { grade: "A", color: "text-green-400" };
-    if (score >= 1500) return { grade: "B", color: "text-blue-400" };
-    if (score >= 1000) return { grade: "C", color: "text-purple-400" };
-    return { grade: "D", color: "text-gray-400" };
   };
 
   if (loading) {
@@ -219,6 +250,14 @@ const VolunteerLeaderboard = () => {
             </p>
           </div>
           <div className="flex items-center space-x-2">
+            <button
+              onClick={fetchLeaderboard}
+              disabled={loading}
+              className="p-2 text-gray-400 hover:text-white hover:bg-gray-800 rounded-lg transition-colors disabled:opacity-50"
+              title="Refresh leaderboard"
+            >
+              <RefreshCw className={`w-4 h-4 ${loading ? 'animate-spin' : ''}`} />
+            </button>
             <Trophy className="w-6 h-6 text-orange-500" />
             <span className="text-orange-500 font-medium">Hall of Fame</span>
           </div>
@@ -234,13 +273,19 @@ const VolunteerLeaderboard = () => {
           </div>
           <div className="bg-gray-800/50 rounded-lg p-3 text-center">
             <div className="text-lg font-bold text-orange-400">
-              {volunteers.reduce((sum, v) => sum + (v.volunteerStats?.requestsAccepted || 0), 0)}
+              {volunteers.reduce((sum, v) => {
+                const stats = v.volunteerStats || {};
+                return sum + (stats.requestsAccepted || stats.totalResponses || stats.totalRequests || 0);
+              }, 0)}
             </div>
             <div className="text-xs text-gray-400">Total Responses</div>
           </div>
           <div className="bg-gray-800/50 rounded-lg p-3 text-center">
             <div className="text-lg font-bold text-green-400">
-              {volunteers.reduce((sum, v) => sum + (v.volunteerStats?.requestsFulfilled || 0), 0)}
+              {volunteers.reduce((sum, v) => {
+                const stats = v.volunteerStats || {};
+                return sum + (stats.requestsFulfilled || stats.fulfilledRequests || 0);
+              }, 0)}
             </div>
             <div className="text-xs text-gray-400">Requests Completed</div>
           </div>
@@ -258,7 +303,6 @@ const VolunteerLeaderboard = () => {
         <div className="space-y-3">
           {volunteers.map((volunteer, index) => {
             const rank = index + 1;
-            const scoreGrade = getScoreGrade(volunteer.points);
 
             return (
               <motion.div
@@ -282,11 +326,6 @@ const VolunteerLeaderboard = () => {
                       )}`}
                     >
                       {rank <= 3 ? getRankIcon(rank) : rank}
-                    </div>
-                    <div
-                      className={`text-xs mt-1 font-medium ${scoreGrade.color}`}
-                    >
-                      {scoreGrade.grade}
                     </div>
                   </div>
 
@@ -321,10 +360,10 @@ const VolunteerLeaderboard = () => {
                         <MapPin className="w-3 h-3" />
                         <span className="truncate">{volunteer.department || "Unknown Department"}</span>
                       </div>
-                      <div className="flex items-center space-x-1">
+                      {/* <div className="flex items-center space-x-1">
                         <Calendar className="w-3 h-3" />
                         <span>Since {formatJoinDate(volunteer.joinDate)}</span>
-                      </div>
+                      </div> */}
                     </div>
                   </div>
 
@@ -336,15 +375,26 @@ const VolunteerLeaderboard = () => {
                     <div className="text-xs text-gray-400">points</div>
                     <div className="flex items-center space-x-4 mt-2 text-xs text-gray-500">
                       <div className="flex items-center space-x-1">
-                        <span>{volunteer.volunteerStats?.requestsAccepted || 0}</span>
-                        <span>responses</span>
+                        <span>
+                          {volunteer.volunteerStats?.requestsAccepted || 
+                           volunteer.volunteerStats?.totalResponses || 
+                           volunteer.volunteerStats?.totalRequests || 0}
+                        </span>
+                        <span>responded</span>
                       </div>
+                      {/* <div className="flex items-center space-x-1">
+                        <span>
+                          {volunteer.volunteerStats?.requestsFulfilled || 
+                           volunteer.volunteerStats?.fulfilledRequests || 0}
+                        </span>
+                        <span>completed</span>
+                      </div> */}
                       <div className="flex items-center space-x-1">
                         <Star className="w-3 h-3 text-yellow-400" />
                         <span>
                           {volunteer.volunteerStats?.averageRating 
                             ? volunteer.volunteerStats.averageRating.toFixed(1) 
-                            : "N/A"}
+                            : "New"}
                         </span>
                       </div>
                     </div>
@@ -398,24 +448,15 @@ const VolunteerLeaderboard = () => {
                   <h3 className="text-xl font-bold text-white mb-1">
                     {selectedVolunteer.name}
                   </h3>
-                  <p className="text-gray-400">
+                  <p className="text-gray-400 mb-3">
                     {selectedVolunteer.department || "Unknown Department"}
                   </p>
 
-                  {/* Score Grade */}
-                  <div
-                    className={`inline-flex items-center space-x-2 mt-2 px-3 py-1 rounded-full bg-gray-900 border border-gray-600`}
-                  >
+                  {/* Score */}
+                  <div className="inline-flex items-center space-x-2 mt-2 px-3 py-1 rounded-full bg-gray-900 border border-gray-600">
                     <Trophy className="w-4 h-4 text-orange-500" />
                     <span className="text-white font-medium">
                       {selectedVolunteer.points.toLocaleString()} points
-                    </span>
-                    <span
-                      className={`font-bold ${
-                        getScoreGrade(selectedVolunteer.points).color
-                      }`}
-                    >
-                      (Grade {getScoreGrade(selectedVolunteer.points).grade})
                     </span>
                   </div>
                 </div>
@@ -424,15 +465,52 @@ const VolunteerLeaderboard = () => {
                 <div className="grid grid-cols-2 gap-4">
                   <div className="bg-gray-900 rounded-lg p-4 text-center">
                     <div className="text-2xl font-bold text-orange-400 mb-1">
-                      {selectedVolunteer.volunteerStats?.requestsAccepted || 0}
+                      {selectedVolunteer.volunteerStats?.requestsAccepted || 
+                       selectedVolunteer.volunteerStats?.totalResponses || 
+                       selectedVolunteer.volunteerStats?.totalRequests || 0}
                     </div>
                     <div className="text-xs text-gray-400">Total Responses</div>
                   </div>
                   <div className="bg-gray-900 rounded-lg p-4 text-center">
                     <div className="text-2xl font-bold text-green-400 mb-1">
-                      {selectedVolunteer.volunteerStats?.requestsFulfilled || 0}
+                      {selectedVolunteer.volunteerStats?.requestsFulfilled || 
+                       selectedVolunteer.volunteerStats?.fulfilledRequests || 0}
                     </div>
                     <div className="text-xs text-gray-400">Completed</div>
+                  </div>
+                </div>
+
+                {/* Contact Information */}
+                <div>
+                  <h4 className="font-medium text-white mb-3">Contact Information</h4>
+                  <div className="space-y-3">
+                    {(selectedVolunteer.phone || selectedVolunteer.contactInfo?.phone) && 
+                     selectedVolunteer.phone !== "N/A" && selectedVolunteer.contactInfo?.phone !== "N/A" && (
+                      <div className="flex items-center space-x-3 text-gray-300">
+                        <Phone className="w-4 h-4 text-gray-400" />
+                        <span>{selectedVolunteer.phone || selectedVolunteer.contactInfo?.phone}</span>
+                      </div>
+                    )}
+                    {(selectedVolunteer.email || selectedVolunteer.contactInfo?.email) && 
+                     selectedVolunteer.email !== "N/A" && selectedVolunteer.contactInfo?.email !== "N/A" && (
+                      <div className="flex items-center space-x-3 text-gray-300">
+                        <Mail className="w-4 h-4 text-gray-400" />
+                        <span className="break-all">
+                          {selectedVolunteer.email || selectedVolunteer.contactInfo?.email}
+                        </span>
+                      </div>
+                    )}
+                    <div className="flex items-center space-x-3 text-gray-300">
+                      <MapPin className="w-4 h-4 text-gray-400" />
+                      <span>{selectedVolunteer.department || "Unknown Department"}</span>
+                    </div>
+                    {!selectedVolunteer.phone && !selectedVolunteer.email && 
+                     (!selectedVolunteer.contactInfo?.phone || selectedVolunteer.contactInfo?.phone === "N/A") &&
+                     (!selectedVolunteer.contactInfo?.email || selectedVolunteer.contactInfo?.email === "N/A") && (
+                      <div className="text-gray-500 text-sm italic">
+                        Contact information not available
+                      </div>
+                    )}
                   </div>
                 </div>
 
