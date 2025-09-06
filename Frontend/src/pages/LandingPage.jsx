@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from "react";
+import React, { useState } from "react";
 import { motion, AnimatePresence } from "motion/react";
 import { useNavigate } from "react-router-dom";
 import {
@@ -16,18 +16,18 @@ import AuthModal from "../components/AuthModal";
 import DarkVeil from "../components/DarkVeil";
 
 const LandingPage = () => {
-  const { isAuthenticated, isLoading } = useAuth();
+  const { isLoading, isAuthenticated } = useAuth();
   const [isAuthModalOpen, setIsAuthModalOpen] = useState(false);
   const [authMode, setAuthMode] = useState("login");
   const [isMenuOpen, setIsMenuOpen] = useState(false);
   const navigate = useNavigate();
 
-  // Redirect authenticated users to chat
-  useEffect(() => {
-    if (!isLoading && isAuthenticated) {
-      navigate("/chat");
-    }
-  }, [isAuthenticated, isLoading, navigate]);
+  // Remove automatic redirect - allow authenticated users to visit landing page
+  // useEffect(() => {
+  //   if (!isLoading && isAuthenticated) {
+  //     navigate("/dashboard");
+  //   }
+  // }, [isAuthenticated, isLoading, navigate]);
 
   const openAuthModal = (mode) => {
     setAuthMode(mode);
@@ -36,7 +36,7 @@ const LandingPage = () => {
 
   const handleAuthSuccess = () => {
     setIsAuthModalOpen(false);
-    navigate("/chat");
+    navigate("/dashboard");
   };
 
   // Show loading state while checking authentication
@@ -124,10 +124,14 @@ const LandingPage = () => {
                   About
                 </a>
                 <button
-                  onClick={() => openAuthModal("login")}
+                  onClick={() =>
+                    isAuthenticated
+                      ? navigate("/dashboard")
+                      : openAuthModal("login")
+                  }
                   className="text-gray-300 hover:text-white transition-colors"
                 >
-                  Login
+                  {isAuthenticated ? "Dashboard" : "Login"}
                 </button>
                 <motion.button
                   whileHover={{ scale: 1.02 }}
@@ -177,10 +181,14 @@ const LandingPage = () => {
                       About
                     </a>
                     <button
-                      onClick={() => openAuthModal("login")}
+                      onClick={() =>
+                        isAuthenticated
+                          ? navigate("/dashboard")
+                          : openAuthModal("login")
+                      }
                       className="text-left text-gray-300 hover:text-white transition-colors"
                     >
-                      Login
+                      {isAuthenticated ? "Dashboard" : "Login"}
                     </button>
                     <button
                       onClick={() => openAuthModal("register")}

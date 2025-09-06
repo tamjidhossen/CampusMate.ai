@@ -14,21 +14,21 @@ const App = () => {
       <Router>
         <Routes>
           <Route path="/" element={<LandingPage />} />
-          <Route 
-            path="/chat" 
+          <Route
+            path="/dashboard"
             element={
               <ProtectedRoute>
                 <ChatInterface />
               </ProtectedRoute>
-            } 
+            }
           />
-          <Route 
-            path="/profile" 
+          <Route
+            path="/profile"
             element={
               <ProtectedRoute>
                 <ProfilePage />
               </ProtectedRoute>
-            } 
+            }
           />
         </Routes>
         <Toaster position="top-right" theme="dark" richColors closeButton />

@@ -11,6 +11,7 @@ import {
   Trophy,
   Menu,
   X,
+  LogOut,
 } from "lucide-react";
 import { toast } from "sonner";
 import TextShimmerWave from "../ui/TextShimmerWave";
@@ -19,9 +20,11 @@ import HelpRequestSection from "./HelpRequestSection";
 import VolunteerLeaderboard from "./VolunteerLeaderboard";
 import ProfileModal from "../ProfileModal";
 import { sendChatMessage, ApiError } from "../../services/api";
+import { useAuth } from "../../hooks/useAuth";
 
 const ChatInterface = () => {
   const navigate = useNavigate();
+  const { logout } = useAuth();
   const [messages, setMessages] = useState([
     {
       id: 1,
@@ -132,6 +135,17 @@ const ChatInterface = () => {
     });
   };
 
+  const handleLogout = async () => {
+    try {
+      await logout();
+      navigate("/");
+      toast.success("Logged out successfully");
+    } catch (error) {
+      console.error("Logout error:", error);
+      toast.error("Error logging out");
+    }
+  };
+
   const tabs = [
     { id: "chat", label: "Chat", icon: MessageSquare },
     { id: "help", label: "Help", icon: HelpCircle },
@@ -219,6 +233,18 @@ const ChatInterface = () => {
                 </span>
               </button>
 
+              {/* Logout Button */}
+              <button
+                onClick={handleLogout}
+                className="flex items-center space-x-2 cursor-pointer px-3 py-2 h-10 rounded-xl hover:bg-red-800/60 transition-all duration-300 border border-gray-700/50 hover:border-red-600/50 text-gray-300 hover:text-red-400"
+                title="Logout"
+              >
+                <LogOut className="w-4 h-4" />
+                {/* <span className="hidden sm:block text-sm font-medium">
+                  Logout
+                </span> */}
+              </button>
+
               {/* Mobile Menu Button */}
               <button
                 onClick={() => setIsMobileMenuOpen(!isMobileMenuOpen)}
@@ -263,6 +289,18 @@ const ChatInterface = () => {
                       </button>
                     );
                   })}
+
+                  {/* Mobile Logout Button */}
+                  <button
+                    onClick={() => {
+                      handleLogout();
+                      setIsMobileMenuOpen(false);
+                    }}
+                    className="flex items-center space-x-3 px-4 py-3 rounded-xl text-sm font-medium transition-all duration-300 text-gray-300 hover:text-red-400 hover:bg-red-800/60 border border-gray-700/50 hover:border-red-600/50"
+                  >
+                    <LogOut className="w-4 h-4" />
+                    <span>Logout</span>
+                  </button>
                 </div>
               </motion.div>
             )}
