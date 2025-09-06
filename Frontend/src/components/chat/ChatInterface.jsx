@@ -13,12 +13,14 @@ import {
   X,
   LogOut,
   AlertCircle,
+  Settings,
 } from "lucide-react";
 import { toast } from "sonner";
 import TextShimmerWave from "../ui/TextShimmerWave";
 import NoticePanel from "./NoticePanel";
 import HelpRequestSection from "./HelpRequestSection";
 import VolunteerLeaderboard from "./VolunteerLeaderboard";
+import AdminNoticeUpload from "../admin/AdminNoticeUpload";
 import ProfileModal from "../ProfileModal";
 import { sendChatMessage, ApiError } from "../../services/api";
 import { useAuth } from "../../hooks/useAuth";
@@ -48,9 +50,9 @@ const ChatInterface = () => {
   const [activeTab, setActiveTab] = useState(() => {
     // Restore the last active tab from localStorage, default to "chat"
     const savedTab = localStorage.getItem("campusmate-active-tab");
-    return savedTab && ["chat", "help", "leaderboard"].includes(savedTab)
-      ? savedTab
-      : "chat";
+    const validTabs = ["chat", "help", "leaderboard"];
+    if (user?.role === 'admin') validTabs.push("admin");
+    return savedTab && validTabs.includes(savedTab) ? savedTab : "chat";
   });
   const [isNoticePanelOpen, setIsNoticePanelOpen] = useState(false);
   const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
@@ -180,6 +182,7 @@ const ChatInterface = () => {
     { id: "chat", label: "Chat", icon: MessageSquare },
     { id: "help", label: "Help", icon: HelpCircle },
     { id: "leaderboard", label: "Leaderboard", icon: Trophy },
+    ...(user?.role === 'admin' ? [{ id: "admin", label: "Admin", icon: Settings }] : []),
   ];
 
   return (
@@ -490,6 +493,13 @@ const ChatInterface = () => {
 
             {activeTab === "help" && <HelpRequestSection />}
             {activeTab === "leaderboard" && <VolunteerLeaderboard />}
+            {activeTab === "admin" && user?.role === 'admin' && (
+              <div className="flex-1 overflow-y-auto">
+                <div className="max-w-7xl mx-auto p-4 sm:p-6 lg:p-8">
+                  <AdminNoticeUpload />
+                </div>
+              </div>
+            )}
           </div>
         </div>
 
