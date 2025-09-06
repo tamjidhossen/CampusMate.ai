@@ -2,6 +2,7 @@ const express = require('express');
 const { body } = require('express-validator');
 const { protect, authorize } = require('../middleware/auth');
 const { validate } = require('../middleware/validation');
+const { validateGeminiNotice } = require('../middleware/geminiValidation');
 const { uploadNoticeAttachments, handleUploadError } = require('../utils/fileUpload');
 
 // Notice controller functions
@@ -96,7 +97,7 @@ router.get('/stats', getNoticeStats); // Get notice statistics
 
 router.route('/')
   .get(getNotices) // Get all notices (admin view)
-  .post(uploadNoticeAttachments, handleUploadError, noticeValidation, validate, createNotice); // Create new notice with file upload
+  .post(uploadNoticeAttachments, handleUploadError, validateGeminiNotice, createNotice); // Create new notice with Gemini AI processing
 
 router.route('/:id')
   .get(getNotice) // Get specific notice

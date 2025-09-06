@@ -3,6 +3,9 @@ const User = require('../models/User');
 const asyncHandler = require('../utils/asyncHandler');
 const ErrorResponse = require('../utils/errorResponse');
 const { deleteFiles, getFilePathFromUrl } = require('../utils/fileUpload');
+const { processNoticeWithGemini } = require('../utils/geminiProcessor');
+// const { validateProcessedNotice } = require('../middleware/geminiValidation');
+const { validateProcessedNotice } = require('../middleware/geminiValidation');
 
 // @desc    Get all notices (admin only)
 // @route   GET /api/notices
@@ -91,46 +94,119 @@ exports.getNotice = asyncHandler(async (req, res, next) => {
 // @route   POST /api/notices
 // @access  Private (Admin only)
 exports.createNotice = asyncHandler(async (req, res, next) => {
-  // Add author to request body
-  req.body.author = req.user.id;
+  try {
+    // Process content with Gemini AI
+    const geminiProcessedData = await processNoticeWithGemini({
+      files: req.files || [],
+      textData: req.body
+    });
 
-  // All notices created by admin are auto-approved and published
-  req.body.approvalStatus = 'Approved';
-  req.body.approvedBy = req.user.id;
-  req.body.approvedAt = new Date();
-  req.body.status = 'Published';
+    // Validate processed data
+    const validationErrors = validateProcessedNotice(geminiProcessedData);
+    if (validationErrors.length > 0) {
+      return next(new ErrorResponse(`Validation failed: ${validationErrors.join(', ')}`, 400));
+    }
 
-  // Validate that targeting is specified (no public notices)
-  if (!req.body.targeting || 
-      (!req.body.targeting.roles || req.body.targeting.roles.length === 0) &&
-      (!req.body.targeting.departments || req.body.targeting.departments.length === 0) &&
-      (!req.body.targeting.specificUsers || req.body.targeting.specificUsers.length === 0)) {
-    return next(new ErrorResponse('Notice must have specific targeting criteria. No public notices allowed.', 400));
-  }
+    // Handle file attachments if any
+    if (req.files && req.files.length > 0) {
+      const attachments = req.files.map(file => ({
+        filename: file.filename,
+        originalName: file.originalname,
+        mimetype: file.mimetype,
+        size: file.size,
+        url: `/uploads/notice-attachments/${file.filename}`,
+        uploadedAt: new Date()
+      }));
+      
+      geminiProcessedData.attachments = attachments;
+    }
 
-  // Handle file attachments if any
-  if (req.files && req.files.length > 0) {
-    const attachments = req.files.map(file => ({
-      filename: file.filename,
-      originalName: file.originalname,
-      mimetype: file.mimetype,
-      size: file.size,
-      url: `/uploads/notice-attachments/${file.filename}`,
-      uploadedAt: new Date()
-    }));
+    // Merge Gemini processed data with required system fields
+    const noticeData = {
+      ...geminiProcessedData,
+      author: req.user.id,
+      approvalStatus: 'Approved',
+      approvedBy: req.user.id,
+      approvedAt: new Date(),
+      status: 'Published'
+    };
+
+    // Validate that targeting is specified (no public notices)
+    if (!noticeData.targeting || 
+        (!noticeData.targeting.roles || noticeData.targeting.roles.length === 0 || (noticeData.targeting.roles.length === 1 && noticeData.targeting.roles[0] === 'all')) &&
+        (!noticeData.targeting.departments || noticeData.targeting.departments.length === 0 || (noticeData.targeting.departments.length === 1 && noticeData.targeting.departments[0] === 'all')) &&
+        (!noticeData.targeting.specificUsers || noticeData.targeting.specificUsers.length === 0)) {
+      
+      // If Gemini didn't provide specific targeting, use the original request body targeting
+      if (req.body.targeting) {
+        noticeData.targeting = req.body.targeting;
+      } else {
+        return next(new ErrorResponse('Notice must have specific targeting criteria. No public notices allowed. Please specify roles, departments, or specific users.', 400));
+      }
+    }
+
+    // Final validation for targeting
+    const targeting = noticeData.targeting;
+    if ((!targeting.roles || targeting.roles.length === 0 || (targeting.roles.length === 1 && targeting.roles[0] === 'all')) &&
+        (!targeting.departments || targeting.departments.length === 0 || (targeting.departments.length === 1 && targeting.departments[0] === 'all')) &&
+        (!targeting.specificUsers || targeting.specificUsers.length === 0)) {
+      return next(new ErrorResponse('Notice must have specific targeting criteria. No public notices allowed.', 400));
+    }
+
+    const notice = await Notice.create(noticeData);
+
+    await notice.populate('author', 'name department role');
+
+    res.status(201).json({
+      success: true,
+      data: notice,
+      message: 'Notice created and published successfully with AI enhancement',
+      geminiProcessed: true
+    });
+
+  } catch (geminiError) {
+    console.error('Gemini AI processing failed:', geminiError);
     
-    req.body.attachments = attachments;
+    // Fallback to original logic if Gemini fails
+    req.body.author = req.user.id;
+    req.body.approvalStatus = 'Approved';
+    req.body.approvedBy = req.user.id;
+    req.body.approvedAt = new Date();
+    req.body.status = 'Published';
+
+    // Validate that targeting is specified (no public notices)
+    if (!req.body.targeting || 
+        (!req.body.targeting.roles || req.body.targeting.roles.length === 0) &&
+        (!req.body.targeting.departments || req.body.targeting.departments.length === 0) &&
+        (!req.body.targeting.specificUsers || req.body.targeting.specificUsers.length === 0)) {
+      return next(new ErrorResponse('Notice must have specific targeting criteria. No public notices allowed.', 400));
+    }
+
+    // Handle file attachments if any
+    if (req.files && req.files.length > 0) {
+      const attachments = req.files.map(file => ({
+        filename: file.filename,
+        originalName: file.originalname,
+        mimetype: file.mimetype,
+        size: file.size,
+        url: `/uploads/notice-attachments/${file.filename}`,
+        uploadedAt: new Date()
+      }));
+      
+      req.body.attachments = attachments;
+    }
+
+    const notice = await Notice.create(req.body);
+    await notice.populate('author', 'name department role');
+
+    res.status(201).json({
+      success: true,
+      data: notice,
+      message: 'Notice created and published successfully (AI enhancement failed, used original content)',
+      geminiProcessed: false,
+      fallbackReason: geminiError.message
+    });
   }
-
-  const notice = await Notice.create(req.body);
-
-  await notice.populate('author', 'name department role');
-
-  res.status(201).json({
-    success: true,
-    data: notice,
-    message: 'Notice created and published successfully'
-  });
 });
 
 // @desc    Update notice (admin only)
