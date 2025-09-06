@@ -131,7 +131,7 @@ const ProfileModal = ({ isOpen, onClose }) => {
     try {
       setIsLoading(true);
       const result = await updateProfile(tempData);
-      
+
       if (result.success) {
         // Update local state with the updated user data
         setProfileData({ ...profileData, ...tempData });
@@ -161,7 +161,7 @@ const ProfileModal = ({ isOpen, onClose }) => {
     try {
       setIsLoading(true);
       const result = await logout();
-      
+
       if (result.success) {
         toast.success("Logged out successfully");
         onClose(); // Close the modal
@@ -510,7 +510,7 @@ const ProfileModal = ({ isOpen, onClose }) => {
                       options: AVAILABILITY_OPTIONS,
                       conditional: "isVolunteer",
                       colSpan: 1,
-                    }
+                    },
                   ]}
                 />
               </div>
