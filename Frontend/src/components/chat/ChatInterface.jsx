@@ -12,6 +12,7 @@ import {
   Menu,
   X,
   LogOut,
+  AlertCircle,
 } from "lucide-react";
 import { toast } from "sonner";
 import TextShimmerWave from "../ui/TextShimmerWave";
@@ -97,15 +98,24 @@ const ChatInterface = () => {
 
       if (error instanceof ApiError) {
         if (error.status === 0) {
+          console.error(
+            "Backend connection failed: Unable to connect to the server. Please check if the backend is running."
+          );
           errorMessage =
-            "Unable to connect to the server. Please check if the backend is running.";
-          toastMessage = "Server connection failed";
+            "I'm currently unable to respond. Please try again in a moment or contact support if this continues.";
+          toastMessage = "Connection issue";
         } else if (error.status === 408) {
-          errorMessage = "The request took too long. Please try again.";
-          toastMessage = "Request timeout";
+          console.error(
+            "Request timeout: The request took too long to complete."
+          );
+          errorMessage =
+            "I'm taking longer than usual to respond. Please try again.";
+          toastMessage = "Response timeout";
         } else {
-          errorMessage = error.message;
-          toastMessage = "API error occurred";
+          console.error("API error:", error.message, "Status:", error.status);
+          errorMessage =
+            "I'm experiencing some technical difficulties. Please try again.";
+          toastMessage = "Service temporarily unavailable";
         }
       }
 
