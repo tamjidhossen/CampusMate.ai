@@ -48,6 +48,7 @@ const ProfileModal = ({ isOpen, onClose }) => {
   const [tempData, setTempData] = useState({});
   const [isLoading, setIsLoading] = useState(false);
   const [validationErrors, setValidationErrors] = useState({});
+  const [backendErrors, setBackendErrors] = useState({});
 
   const loadProfileData = useCallback(() => {
     try {
@@ -90,30 +91,93 @@ const ProfileModal = ({ isOpen, onClose }) => {
 
   const handleEdit = () => {
     setIsEditMode(true);
-    setTempData({ ...profileData });
+    // Initialize tempData with default values to avoid undefined/null values
+    setTempData({
+      ...profileData,
+      name: profileData.name || "",
+      email: profileData.email || "",
+      phone: profileData.phone || "",
+      department: profileData.department || "",
+      residence: profileData.residence || "",
+      bloodGroup: profileData.bloodGroup || "",
+      session: profileData.session || "",
+      role: profileData.role || "student",
+    });
+    setValidationErrors({});
+    setBackendErrors({});
   };
 
   const handleCancel = () => {
     setIsEditMode(false);
     setTempData({});
     setValidationErrors({});
+    setBackendErrors({});
   };
 
   const validateForm = () => {
     const errors = {};
 
+    // Name validation - required with length constraints
     if (!tempData.name?.trim()) {
       errors.name = "Name is required";
+    } else if (tempData.name.trim().length < 2) {
+      errors.name = "Name must be at least 2 characters";
+    } else if (tempData.name.trim().length > 100) {
+      errors.name = "Name cannot exceed 100 characters";
     }
 
+    // Email validation - required and format
     if (!tempData.email?.trim()) {
       errors.email = "Email is required";
-    } else if (!/\S+@\S+\.\S+/.test(tempData.email)) {
-      errors.email = "Email is invalid";
+    } else if (
+      !/^\w+([.-]?\w+)*@\w+([.-]?\w+)*(\.\w{2,3})+$/.test(tempData.email)
+    ) {
+      errors.email = "Please enter a valid email";
     }
 
-    if (tempData.phone && !/^\+?[\d\s-()]+$/.test(tempData.phone)) {
-      errors.phone = "Please enter a valid phone number";
+    // Phone validation - if provided, must be valid format
+    if (tempData.phone !== undefined && tempData.phone !== null) {
+      const phoneValue = String(tempData.phone).trim();
+      if (phoneValue && !/^\+?[\d\s-()]+$/.test(phoneValue)) {
+        errors.phone = "Please provide a valid phone number";
+      }
+    }
+
+    // Blood group validation - if provided, must be valid
+    if (tempData.bloodGroup !== undefined && tempData.bloodGroup !== null) {
+      const bloodGroupValue = String(tempData.bloodGroup).trim();
+      if (bloodGroupValue && !BLOOD_GROUP_OPTIONS.includes(bloodGroupValue)) {
+        errors.bloodGroup = "Please select a valid blood group";
+      }
+    }
+
+    // Department validation - if provided, must be valid
+    if (tempData.department !== undefined && tempData.department !== null) {
+      const departmentValue = String(tempData.department).trim();
+      if (departmentValue && !DEPARTMENT_OPTIONS.includes(departmentValue)) {
+        errors.department = "Please select a valid department";
+      }
+    }
+
+    // Role validation - if provided, must be valid
+    if (tempData.role !== undefined && tempData.role !== null) {
+      const roleValue = String(tempData.role).trim();
+      if (roleValue && !ROLE_OPTIONS.includes(roleValue)) {
+        errors.role = "Please select a valid role";
+      }
+    }
+
+    // Residence validation - if provided, length constraint
+    if (tempData.residence !== undefined && tempData.residence !== null) {
+      const residenceValue = String(tempData.residence).trim();
+      if (residenceValue && residenceValue.length > 200) {
+        errors.residence = "Residence cannot exceed 200 characters";
+      }
+    }
+
+    // Session validation for students - required if role is student
+    if (tempData.role === "student" && !tempData.session?.trim()) {
+      errors.session = "Session is required for students";
     }
 
     setValidationErrors(errors);
@@ -139,16 +203,76 @@ const ProfileModal = ({ isOpen, onClose }) => {
       }
     } catch (error) {
       console.error("Failed to save profile:", error);
-      toast.error("Failed to update profile. Please try again.");
+
+      // Handle backend validation errors
+      if (error.statusCode === 400 && error.data?.errors) {
+        // Map backend validation errors to frontend validation state
+        const backendErrors = {};
+        error.data.errors.forEach((err) => {
+          backendErrors[err.field] = err.message;
+        });
+        setValidationErrors(backendErrors);
+        toast.error("Please fix the validation errors and try again.");
+      } else {
+        toast.error(
+          error.message || "Failed to update profile. Please try again."
+        );
+      }
     } finally {
       setIsLoading(false);
     }
   };
 
   const handleInputChange = (field, value) => {
-    setTempData((prev) => ({ ...prev, [field]: value }));
+    // Convert special "not specified" value back to empty string
+    const processedValue = value === "__not_specified__" ? "" : value;
+
+    setTempData((prev) => ({ ...prev, [field]: processedValue }));
+
+    // Clear validation error for this field when user starts typing/selecting
     if (validationErrors[field]) {
       setValidationErrors((prev) => ({ ...prev, [field]: null }));
+    }
+
+    // Real-time validation for some critical fields
+    const newErrors = {};
+
+    if (field === "phone" && processedValue) {
+      const phoneValue = String(processedValue).trim();
+      if (phoneValue && !/^\+?[\d\s-()]+$/.test(phoneValue)) {
+        newErrors.phone = "Please provide a valid phone number";
+      }
+    }
+
+    if (field === "email" && processedValue) {
+      const emailValue = String(processedValue).trim();
+      if (
+        emailValue &&
+        !/^\w+([.-]?\w+)*@\w+([.-]?\w+)*(\.\w{2,3})+$/.test(emailValue)
+      ) {
+        newErrors.email = "Please enter a valid email";
+      }
+    }
+
+    if (field === "name" && processedValue) {
+      const nameValue = String(processedValue).trim();
+      if (nameValue && nameValue.length > 100) {
+        newErrors.name = "Name cannot exceed 100 characters";
+      } else if (nameValue && nameValue.length < 2) {
+        newErrors.name = "Name must be at least 2 characters";
+      }
+    }
+
+    if (field === "residence" && processedValue) {
+      const residenceValue = String(processedValue).trim();
+      if (residenceValue && residenceValue.length > 200) {
+        newErrors.residence = "Residence cannot exceed 200 characters";
+      }
+    }
+
+    // Set real-time validation errors
+    if (Object.keys(newErrors).length > 0) {
+      setValidationErrors((prev) => ({ ...prev, ...newErrors }));
     }
   };
 
@@ -492,11 +616,23 @@ const FormField = ({ field, value, onChange, isEditMode, error }) => {
     switch (type) {
       case "select":
         return (
-          <Select value={value || ""} onValueChange={onChange}>
-            <SelectTrigger className="bg-gray-700/50 backdrop-blur-sm border border-gray-600/50 rounded-xl px-4 py-3 text-white placeholder-gray-400 focus:outline-none focus:border-orange-500/70 focus:ring-2 focus:ring-orange-500/20 transition-all duration-300 shadow-lg hover:bg-gray-700/70">
+          <Select value={value || "__not_specified__"} onValueChange={onChange}>
+            <SelectTrigger
+              className={`bg-gray-700/50 backdrop-blur-sm border rounded-xl px-4 py-3 text-white placeholder-gray-400 focus:outline-none transition-all duration-300 shadow-lg hover:bg-gray-700/70 ${
+                error
+                  ? "border-red-500/70 focus:border-red-500/70 focus:ring-2 focus:ring-red-500/20"
+                  : "border-gray-600/50 focus:border-orange-500/70 focus:ring-2 focus:ring-orange-500/20"
+              }`}
+            >
               <SelectValue placeholder={`Select ${label}`} />
             </SelectTrigger>
             <SelectContent className="bg-gray-800/90 backdrop-blur-xl border border-gray-700/50 rounded-xl shadow-2xl">
+              <SelectItem
+                value="__not_specified__"
+                className="text-gray-400 hover:bg-gray-700/50 focus:bg-gray-700/50 cursor-pointer"
+              >
+                Not specified
+              </SelectItem>
               {options?.map((option) => (
                 <SelectItem
                   key={option}
@@ -517,7 +653,11 @@ const FormField = ({ field, value, onChange, isEditMode, error }) => {
             onChange={(e) => onChange(e.target.value)}
             placeholder={`Enter ${label}`}
             rows={3}
-            className="bg-gray-700/50 backdrop-blur-sm border border-gray-600/50 rounded-xl px-4 py-3 text-white placeholder-gray-400 focus:outline-none focus:border-orange-500/70 focus:ring-2 focus:ring-orange-500/20 transition-all duration-300 shadow-lg hover:bg-gray-700/70 resize-none w-full"
+            className={`bg-gray-700/50 backdrop-blur-sm border rounded-xl px-4 py-3 text-white placeholder-gray-400 focus:outline-none transition-all duration-300 shadow-lg hover:bg-gray-700/70 resize-none w-full ${
+              error
+                ? "border-red-500/70 focus:border-red-500/70 focus:ring-2 focus:ring-red-500/20"
+                : "border-gray-600/50 focus:border-orange-500/70 focus:ring-2 focus:ring-orange-500/20"
+            }`}
           />
         );
 
@@ -549,9 +689,13 @@ const FormField = ({ field, value, onChange, isEditMode, error }) => {
               onChange={(e) => onChange(e.target.value)}
               placeholder={`Enter ${label}`}
               readOnly={readOnly}
-              className={`bg-gray-700/50 backdrop-blur-sm border border-gray-600/50 rounded-xl px-4 py-3 text-white placeholder-gray-400 focus:outline-none focus:border-orange-500/70 focus:ring-2 focus:ring-orange-500/20 transition-all duration-300 shadow-lg hover:bg-gray-700/70 w-full ${
+              className={`bg-gray-700/50 backdrop-blur-sm border rounded-xl px-4 py-3 text-white placeholder-gray-400 focus:outline-none transition-all duration-300 shadow-lg hover:bg-gray-700/70 w-full ${
                 icon ? "pl-12" : ""
-              } ${readOnly ? "cursor-not-allowed opacity-70" : ""}`}
+              } ${readOnly ? "cursor-not-allowed opacity-70" : ""} ${
+                error
+                  ? "border-red-500/70 focus:border-red-500/70 focus:ring-2 focus:ring-red-500/20"
+                  : "border-gray-600/50 focus:border-orange-500/70 focus:ring-2 focus:ring-orange-500/20"
+              }`}
             />
           </div>
         );

@@ -169,14 +169,35 @@ export async function updateProfile(profileData) {
   // Create FormData for file upload support
   const formData = new FormData();
 
-  // Add all profile fields to FormData
+  // Clean the profile data - remove empty strings for optional fields
+  const cleanedData = {};
   Object.keys(profileData).forEach((key) => {
-    if (profileData[key] !== null && profileData[key] !== undefined) {
-      if (key === "profilePicture" && profileData[key] instanceof File) {
-        formData.append("profilePicture", profileData[key]);
-      } else if (key !== "profilePicture") {
-        formData.append(key, profileData[key]);
+    const value = profileData[key];
+
+    // Skip completely empty, null, or undefined values
+    if (value === null || value === undefined) {
+      return;
+    }
+
+    // For strings, only include non-empty trimmed values
+    if (typeof value === "string") {
+      const trimmedValue = value.trim();
+      if (trimmedValue !== "") {
+        cleanedData[key] = trimmedValue;
       }
+    } else {
+      // For non-strings (booleans, files, etc.), include as-is
+      cleanedData[key] = value;
+    }
+  });
+
+  // Add all cleaned profile fields to FormData
+  Object.keys(cleanedData).forEach((key) => {
+    const value = cleanedData[key];
+    if (key === "profilePicture" && value instanceof File) {
+      formData.append("profilePicture", value);
+    } else if (key !== "profilePicture") {
+      formData.append(key, value);
     }
   });
 
