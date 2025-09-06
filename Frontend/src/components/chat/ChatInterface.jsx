@@ -45,7 +45,13 @@ const ChatInterface = () => {
   ]);
   const [inputMessage, setInputMessage] = useState("");
   const [isLoading, setIsLoading] = useState(false);
-  const [activeTab, setActiveTab] = useState("chat");
+  const [activeTab, setActiveTab] = useState(() => {
+    // Restore the last active tab from localStorage, default to "chat"
+    const savedTab = localStorage.getItem("campusmate-active-tab");
+    return savedTab && ["chat", "help", "leaderboard"].includes(savedTab)
+      ? savedTab
+      : "chat";
+  });
   const [isNoticePanelOpen, setIsNoticePanelOpen] = useState(false);
   const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
   const [isProfileModalOpen, setIsProfileModalOpen] = useState(false);
@@ -164,6 +170,12 @@ const ChatInterface = () => {
     }
   };
 
+  // Function to handle tab change and persist to localStorage
+  const handleTabChange = (tabId) => {
+    setActiveTab(tabId);
+    localStorage.setItem("campusmate-active-tab", tabId);
+  };
+
   const tabs = [
     { id: "chat", label: "Chat", icon: MessageSquare },
     { id: "help", label: "Help", icon: HelpCircle },
@@ -197,7 +209,7 @@ const ChatInterface = () => {
                 return (
                   <button
                     key={tab.id}
-                    onClick={() => setActiveTab(tab.id)}
+                    onClick={() => handleTabChange(tab.id)}
                     className={`relative px-4 py-2 rounded-lg text-sm font-medium transition-all duration-300 flex items-center space-x-2 min-w-[100px] justify-center ${
                       activeTab === tab.id
                         ? "bg-orange-600 text-white shadow-lg shadow-orange-600/30"
@@ -301,7 +313,7 @@ const ChatInterface = () => {
                       <button
                         key={tab.id}
                         onClick={() => {
-                          setActiveTab(tab.id);
+                          handleTabChange(tab.id);
                           setIsMobileMenuOpen(false);
                         }}
                         className={`flex items-center space-x-3 px-4 py-3 rounded-xl text-sm font-medium transition-all duration-300 ${

@@ -460,8 +460,8 @@ const HelpRequestSection = () => {
               <div className="flex items-center justify-between pt-4 border-t border-gray-700">
                 <div className="flex items-center space-x-2">
                   <div className="flex items-center space-x-1 text-xs text-gray-500">
-                    <MapPin className="w-3 h-3" />
-                    <span>{request.requester?.department || 'Unknown Dept'}</span>
+                    {/* <MapPin className="w-3 h-3" />
+                    <span>{request.requester?.department || 'Unknown Dept'}</span> */}
                   </div>
                 </div>
 
