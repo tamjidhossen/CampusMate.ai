@@ -1,34 +1,15 @@
 // Dummy profile data - replace with API calls later
 export const DUMMY_PROFILE_DATA = {
-  // Basic Information
-  fullName: "John Doe",
+  // Basic Information from User model
+  name: "John Doe",
   email: "john.doe@jkkniu.edu.bd",
-  phoneNumber: "+880123456789",
-  dateOfBirth: "1999-05-15",
-  
-  // Academic Information
-  role: "student",
+  phone: "+880123456789",
   department: "Computer Science and Engineering",
-  program: "BSc CSE",
-  currentYear: "3rd Year",
-  currentSemester: "6th Semester",
-  studentId: "CSE190001",
-  
-  // Residence Information
-  residenceType: "Residential Hall",
-  hallName: "Sheikh Hasina Hall",
-  currentAddress: "Sheikh Hasina Hall, Room 201, JKKNIU Campus",
-  
-  // Medical & Emergency
+  residence: "Sheikh Hasina Hall, Room 201, JKKNIU Campus",
   bloodGroup: "B+",
-  emergencyContactName: "Jane Doe",
-  emergencyContactNumber: "+880987654321",
-  
-  // Volunteer Settings
+  role: "student",
+  session: "2019-20",
   isVolunteer: true,
-  availability: "Available on Call",
-  
-  // Profile Picture
   profilePicture: null,
 };
 
@@ -63,10 +44,17 @@ export const DEPARTMENT_OPTIONS = [
   "Other",
 ];
 
-export const BLOOD_GROUP_OPTIONS = ["A+", "A-", "B+", "B-", "AB+", "AB-", "O+", "O-"];
-export const RESIDENCE_TYPE_OPTIONS = ["Residential Hall", "Off-Campus", "Other"];
-export const ROLE_OPTIONS = ["student", "teacher", "staff"];
-export const AVAILABILITY_OPTIONS = ["Always Available", "Available on Call", "Not Available"];
+export const BLOOD_GROUP_OPTIONS = [
+  "A+",
+  "A-",
+  "B+",
+  "B-",
+  "AB+",
+  "AB-",
+  "O+",
+  "O-",
+];
+export const ROLE_OPTIONS = ["student", "teacher", "admin", "staff"];
 
 // API functions placeholder - replace with actual API calls
 export const profileAPI = {
@@ -77,7 +65,7 @@ export const profileAPI = {
       setTimeout(() => resolve(DUMMY_PROFILE_DATA), 500);
     });
   },
-  
+
   // Update user profile data
   updateProfile: async (profileData) => {
     // TODO: Replace with actual API call
@@ -85,12 +73,15 @@ export const profileAPI = {
       setTimeout(() => resolve({ success: true, data: profileData }), 1000);
     });
   },
-  
+
   // Upload profile picture
   uploadProfilePicture: async (file) => {
     // TODO: Replace with actual API call
     return new Promise((resolve) => {
-      setTimeout(() => resolve({ success: true, url: URL.createObjectURL(file) }), 1500);
+      setTimeout(
+        () => resolve({ success: true, url: URL.createObjectURL(file) }),
+        1500
+      );
     });
   },
 };

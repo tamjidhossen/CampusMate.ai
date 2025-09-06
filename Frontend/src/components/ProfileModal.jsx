@@ -14,16 +14,13 @@ import {
   Heart,
   Users,
   AlertCircle,
-  LogOut,
 } from "lucide-react";
 import { useAuth } from "../hooks/useAuth";
 import { toast } from "sonner";
 import {
   DEPARTMENT_OPTIONS,
   BLOOD_GROUP_OPTIONS,
-  RESIDENCE_TYPE_OPTIONS,
   ROLE_OPTIONS,
-  AVAILABILITY_OPTIONS,
 } from "../constants/profileData";
 import {
   Select,
@@ -34,7 +31,7 @@ import {
 } from "./ui/select";
 
 const ProfileModal = ({ isOpen, onClose }) => {
-  const { user, logout, updateProfile } = useAuth();
+  const { user, updateProfile } = useAuth();
   const [isEditMode, setIsEditMode] = useState(false);
   const [profileData, setProfileData] = useState({
     name: "",
@@ -105,8 +102,8 @@ const ProfileModal = ({ isOpen, onClose }) => {
   const validateForm = () => {
     const errors = {};
 
-    if (!tempData.fullName?.trim()) {
-      errors.fullName = "Full name is required";
+    if (!tempData.name?.trim()) {
+      errors.name = "Name is required";
     }
 
     if (!tempData.email?.trim()) {
@@ -115,10 +112,8 @@ const ProfileModal = ({ isOpen, onClose }) => {
       errors.email = "Email is invalid";
     }
 
-    if (!tempData.phoneNumber?.trim()) {
-      errors.phoneNumber = "Phone number is required";
-    } else if (!/^\d{10,}$/.test(tempData.phoneNumber.replace(/\D/g, ""))) {
-      errors.phoneNumber = "Phone number must be at least 10 digits";
+    if (tempData.phone && !/^\+?[\d\s-()]+$/.test(tempData.phone)) {
+      errors.phone = "Please enter a valid phone number";
     }
 
     setValidationErrors(errors);
@@ -157,32 +152,16 @@ const ProfileModal = ({ isOpen, onClose }) => {
     }
   };
 
-  const handleLogout = async () => {
-    try {
-      setIsLoading(true);
-      const result = await logout();
-
-      if (result.success) {
-        toast.success("Logged out successfully");
-        onClose(); // Close the modal
-        // Navigation will be handled by the auth context
-      } else {
-        toast.error("Failed to logout. Please try again.");
-      }
-    } catch (error) {
-      console.error("Logout error:", error);
-      toast.error("Failed to logout. Please try again.");
-    } finally {
-      setIsLoading(false);
-    }
-  };
-
   const handleProfilePictureChange = (e) => {
     const file = e.target.files[0];
     if (file) {
+      // Store the actual file for upload
+      handleInputChange("profilePicture", file);
+
+      // Create preview URL for display
       const reader = new FileReader();
       reader.onload = (e) => {
-        handleInputChange("profilePicture", e.target.result);
+        handleInputChange("profilePicturePreview", e.target.result);
       };
       reader.readAsDataURL(file);
     }
@@ -233,13 +212,15 @@ const ProfileModal = ({ isOpen, onClose }) => {
                         <div className="w-full h-full rounded-full bg-gray-900 flex items-center justify-center backdrop-blur-sm">
                           {(
                             isEditMode
-                              ? tempData.profilePicture
+                              ? tempData.profilePicturePreview ||
+                                tempData.profilePicture
                               : profileData.profilePicture
                           ) ? (
                             <img
                               src={
                                 isEditMode
-                                  ? tempData.profilePicture
+                                  ? tempData.profilePicturePreview ||
+                                    tempData.profilePicture
                                   : profileData.profilePicture
                               }
                               alt="Profile"
@@ -264,7 +245,7 @@ const ProfileModal = ({ isOpen, onClose }) => {
                     </div>
                     <div>
                       <h1 className="text-3xl md:text-4xl font-bold text-white mb-2 tracking-tight">
-                        {isEditMode ? tempData.fullName : profileData.fullName}
+                        {isEditMode ? tempData.name : profileData.name}
                       </h1>
                       <p className="text-blue-300 text-lg md:text-xl font-medium">
                         {isEditMode
@@ -314,20 +295,6 @@ const ProfileModal = ({ isOpen, onClose }) => {
                       </div>
                     )}
                   </div>
-
-                  {/* Logout Button */}
-                  {!isEditMode && (
-                    <Motion.button
-                      whileHover={{ scale: 1.05 }}
-                      whileTap={{ scale: 0.95 }}
-                      onClick={handleLogout}
-                      className="flex items-center justify-center space-x-2 bg-red-500/90 backdrop-blur-sm hover:bg-red-600/90 text-white px-6 py-3 rounded-xl transition-all duration-300 font-medium border border-red-400/50 shadow-lg hover:shadow-xl disabled:opacity-50"
-                      disabled={isLoading}
-                    >
-                      <LogOut className="w-5 h-5" />
-                      {/* <span>Logout</span> */}
-                    </Motion.button>
-                  )}
                 </div>
               </div>
 
@@ -343,7 +310,7 @@ const ProfileModal = ({ isOpen, onClose }) => {
                   validationErrors={validationErrors}
                   fields={[
                     {
-                      key: "fullName",
+                      key: "name",
                       label: "Full Name",
                       type: "text",
                       icon: <User className="w-4 h-4" />,
@@ -358,17 +325,17 @@ const ProfileModal = ({ isOpen, onClose }) => {
                       colSpan: 1,
                     },
                     {
-                      key: "phoneNumber",
+                      key: "phone",
                       label: "Phone Number",
                       type: "tel",
                       icon: <Phone className="w-4 h-4" />,
                       colSpan: 1,
                     },
                     {
-                      key: "dateOfBirth",
-                      label: "Date of Birth",
-                      type: "date",
-                      icon: <Calendar className="w-4 h-4" />,
+                      key: "role",
+                      label: "Role",
+                      type: "select",
+                      options: ROLE_OPTIONS,
                       colSpan: 1,
                     },
                   ]}
@@ -384,20 +351,6 @@ const ProfileModal = ({ isOpen, onClose }) => {
                   validationErrors={validationErrors}
                   fields={[
                     {
-                      key: "studentId",
-                      label: "Student ID",
-                      type: "text",
-                      icon: <GraduationCap className="w-4 h-4" />,
-                      colSpan: 1,
-                    },
-                    {
-                      key: "role",
-                      label: "Role",
-                      type: "select",
-                      options: ROLE_OPTIONS,
-                      colSpan: 1,
-                    },
-                    {
                       key: "department",
                       label: "Department",
                       type: "select",
@@ -405,26 +358,18 @@ const ProfileModal = ({ isOpen, onClose }) => {
                       colSpan: 1,
                     },
                     {
-                      key: "yearOfStudy",
-                      label: "Year of Study",
+                      key: "session",
+                      label: "Session",
                       type: "text",
                       icon: <Calendar className="w-4 h-4" />,
-                      colSpan: 1,
-                    },
-                    {
-                      key: "cgpa",
-                      label: "CGPA",
-                      type: "number",
-                      step: "0.01",
-                      icon: <GraduationCap className="w-4 h-4" />,
                       colSpan: 1,
                     },
                   ]}
                 />
 
-                {/* Residence Information */}
+                {/* Personal Information */}
                 <ProfileFormSection
-                  title="Residence Information"
+                  title="Personal Information"
                   icon={<MapPin className="w-5 h-5" />}
                   isEditMode={isEditMode}
                   data={isEditMode ? tempData : profileData}
@@ -432,58 +377,18 @@ const ProfileModal = ({ isOpen, onClose }) => {
                   validationErrors={validationErrors}
                   fields={[
                     {
-                      key: "residenceType",
-                      label: "Residence Type",
-                      type: "select",
-                      options: RESIDENCE_TYPE_OPTIONS,
-                      colSpan: 1,
-                    },
-                    {
-                      key: "roomNumber",
-                      label: "Room/House Number",
+                      key: "residence",
+                      label: "Residence",
                       type: "text",
                       icon: <MapPin className="w-4 h-4" />,
                       colSpan: 1,
                     },
-                    {
-                      key: "address",
-                      label: "Address",
-                      type: "textarea",
-                      icon: <MapPin className="w-4 h-4" />,
-                      colSpan: 2,
-                    },
-                  ]}
-                />
-
-                {/* Medical Information */}
-                <ProfileFormSection
-                  title="Medical Information"
-                  icon={<Heart className="w-5 h-5" />}
-                  isEditMode={isEditMode}
-                  data={isEditMode ? tempData : profileData}
-                  onInputChange={handleInputChange}
-                  validationErrors={validationErrors}
-                  fields={[
                     {
                       key: "bloodGroup",
                       label: "Blood Group",
                       type: "select",
                       options: BLOOD_GROUP_OPTIONS,
                       colSpan: 1,
-                    },
-                    {
-                      key: "emergencyContact",
-                      label: "Emergency Contact",
-                      type: "tel",
-                      icon: <Phone className="w-4 h-4" />,
-                      colSpan: 1,
-                    },
-                    {
-                      key: "medicalConditions",
-                      label: "Medical Conditions",
-                      type: "textarea",
-                      icon: <Heart className="w-4 h-4" />,
-                      colSpan: 2,
                     },
                   ]}
                 />
@@ -502,14 +407,6 @@ const ProfileModal = ({ isOpen, onClose }) => {
                       label: "Available as Volunteer",
                       type: "checkbox",
                       colSpan: 2,
-                    },
-                    {
-                      key: "availability",
-                      label: "Availability",
-                      type: "select",
-                      options: AVAILABILITY_OPTIONS,
-                      conditional: "isVolunteer",
-                      colSpan: 1,
                     },
                   ]}
                 />
@@ -549,10 +446,9 @@ const ProfileFormSection = ({
         </div>
 
         <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-          {fields.map((field) => {
-            if (field.conditional && !data[field.conditional]) return null;
-
-            return (
+          {fields
+            .filter((field) => !field.conditional || data[field.conditional])
+            .map((field) => (
               <FormField
                 key={field.key}
                 field={field}
@@ -561,8 +457,7 @@ const ProfileFormSection = ({
                 isEditMode={isEditMode}
                 error={validationErrors[field.key]}
               />
-            );
-          })}
+            ))}
         </div>
       </div>
     </Motion.div>

@@ -1,14 +1,15 @@
-import React, { useReducer, useEffect } from 'react';
-import { AuthContext } from './AuthContextValue';
-import { 
-  login as authLogin, 
-  register as authRegister, 
+import React, { useReducer, useEffect } from "react";
+import { AuthContext } from "./AuthContextValue";
+import {
+  login as authLogin,
+  register as authRegister,
   logout as authLogout,
   getCurrentUser,
   isAuthenticated,
   getStoredUser,
-  AuthError
-} from '../services/auth';
+  updateProfile as authUpdateProfile,
+  AuthError,
+} from "../services/auth";
 
 const initialState = {
   user: null,
@@ -18,22 +19,26 @@ const initialState = {
 };
 
 const AUTH_ACTIONS = {
-  LOGIN_START: 'LOGIN_START',
-  LOGIN_SUCCESS: 'LOGIN_SUCCESS',
-  LOGIN_FAILURE: 'LOGIN_FAILURE',
-  REGISTER_START: 'REGISTER_START',
-  REGISTER_SUCCESS: 'REGISTER_SUCCESS',
-  REGISTER_FAILURE: 'REGISTER_FAILURE',
-  LOGOUT: 'LOGOUT',
-  LOAD_USER_SUCCESS: 'LOAD_USER_SUCCESS',
-  LOAD_USER_FAILURE: 'LOAD_USER_FAILURE',
-  CLEAR_ERROR: 'CLEAR_ERROR',
+  LOGIN_START: "LOGIN_START",
+  LOGIN_SUCCESS: "LOGIN_SUCCESS",
+  LOGIN_FAILURE: "LOGIN_FAILURE",
+  REGISTER_START: "REGISTER_START",
+  REGISTER_SUCCESS: "REGISTER_SUCCESS",
+  REGISTER_FAILURE: "REGISTER_FAILURE",
+  UPDATE_PROFILE_START: "UPDATE_PROFILE_START",
+  UPDATE_PROFILE_SUCCESS: "UPDATE_PROFILE_SUCCESS",
+  UPDATE_PROFILE_FAILURE: "UPDATE_PROFILE_FAILURE",
+  LOGOUT: "LOGOUT",
+  LOAD_USER_SUCCESS: "LOAD_USER_SUCCESS",
+  LOAD_USER_FAILURE: "LOAD_USER_FAILURE",
+  CLEAR_ERROR: "CLEAR_ERROR",
 };
 
 function authReducer(state, action) {
   switch (action.type) {
     case AUTH_ACTIONS.LOGIN_START:
     case AUTH_ACTIONS.REGISTER_START:
+    case AUTH_ACTIONS.UPDATE_PROFILE_START:
       return { ...state, isLoading: true, error: null };
 
     case AUTH_ACTIONS.LOGIN_SUCCESS:
@@ -41,6 +46,14 @@ function authReducer(state, action) {
         ...state,
         user: action.payload.user,
         isAuthenticated: true,
+        isLoading: false,
+        error: null,
+      };
+
+    case AUTH_ACTIONS.UPDATE_PROFILE_SUCCESS:
+      return {
+        ...state,
+        user: action.payload.user,
         isLoading: false,
         error: null,
       };
@@ -69,6 +82,7 @@ function authReducer(state, action) {
 
     case AUTH_ACTIONS.LOGIN_FAILURE:
     case AUTH_ACTIONS.REGISTER_FAILURE:
+    case AUTH_ACTIONS.UPDATE_PROFILE_FAILURE:
       return {
         ...state,
         isLoading: false,
@@ -121,7 +135,7 @@ export function AuthProvider({ children }) {
 
     try {
       const response = await authLogin(credentials);
-      
+
       if (response.success) {
         dispatch({
           type: AUTH_ACTIONS.LOGIN_SUCCESS,
@@ -129,7 +143,7 @@ export function AuthProvider({ children }) {
         });
         return { success: true, user: response.user };
       } else {
-        const errorMessage = response.message || 'Login failed';
+        const errorMessage = response.message || "Login failed";
         dispatch({
           type: AUTH_ACTIONS.LOGIN_FAILURE,
           payload: { error: errorMessage },
@@ -137,7 +151,8 @@ export function AuthProvider({ children }) {
         return { success: false, error: errorMessage };
       }
     } catch (error) {
-      const errorMessage = error instanceof AuthError ? error.message : 'Login failed';
+      const errorMessage =
+        error instanceof AuthError ? error.message : "Login failed";
       dispatch({
         type: AUTH_ACTIONS.LOGIN_FAILURE,
         payload: { error: errorMessage },
@@ -151,12 +166,12 @@ export function AuthProvider({ children }) {
 
     try {
       const response = await authRegister(userData);
-      
+
       if (response.success) {
         dispatch({ type: AUTH_ACTIONS.REGISTER_SUCCESS });
         return { success: true, message: response.message };
       } else {
-        const errorMessage = response.message || 'Registration failed';
+        const errorMessage = response.message || "Registration failed";
         dispatch({
           type: AUTH_ACTIONS.REGISTER_FAILURE,
           payload: { error: errorMessage },
@@ -164,7 +179,8 @@ export function AuthProvider({ children }) {
         return { success: false, error: errorMessage };
       }
     } catch (error) {
-      const errorMessage = error instanceof AuthError ? error.message : 'Registration failed';
+      const errorMessage =
+        error instanceof AuthError ? error.message : "Registration failed";
       dispatch({
         type: AUTH_ACTIONS.REGISTER_FAILURE,
         payload: { error: errorMessage },
@@ -182,6 +198,37 @@ export function AuthProvider({ children }) {
     dispatch({ type: AUTH_ACTIONS.LOGOUT });
   };
 
+  const updateProfile = async (profileData) => {
+    dispatch({ type: AUTH_ACTIONS.UPDATE_PROFILE_START });
+
+    try {
+      const response = await authUpdateProfile(profileData);
+
+      if (response.success) {
+        dispatch({
+          type: AUTH_ACTIONS.UPDATE_PROFILE_SUCCESS,
+          payload: { user: response.user },
+        });
+        return { success: true, user: response.user };
+      } else {
+        const errorMessage = response.message || "Profile update failed";
+        dispatch({
+          type: AUTH_ACTIONS.UPDATE_PROFILE_FAILURE,
+          payload: { error: errorMessage },
+        });
+        return { success: false, error: errorMessage };
+      }
+    } catch (error) {
+      const errorMessage =
+        error instanceof AuthError ? error.message : "Profile update failed";
+      dispatch({
+        type: AUTH_ACTIONS.UPDATE_PROFILE_FAILURE,
+        payload: { error: errorMessage },
+      });
+      return { success: false, error: errorMessage };
+    }
+  };
+
   const clearError = () => {
     dispatch({ type: AUTH_ACTIONS.CLEAR_ERROR });
   };
@@ -194,13 +241,12 @@ export function AuthProvider({ children }) {
     login,
     register,
     logout,
+    updateProfile,
     clearError,
   };
 
   return (
-    <AuthContext.Provider value={contextValue}>
-      {children}
-    </AuthContext.Provider>
+    <AuthContext.Provider value={contextValue}>{children}</AuthContext.Provider>
   );
 }
 
