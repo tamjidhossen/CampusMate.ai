@@ -174,13 +174,8 @@ exports.createNotice = asyncHandler(async (req, res, next) => {
     req.body.approvedAt = new Date();
     req.body.status = 'Published';
 
-    // Validate that targeting is specified (no public notices)
-    if (!req.body.targeting || 
-        (!req.body.targeting.roles || req.body.targeting.roles.length === 0) &&
-        (!req.body.targeting.departments || req.body.targeting.departments.length === 0) &&
-        (!req.body.targeting.specificUsers || req.body.targeting.specificUsers.length === 0)) {
-      return next(new ErrorResponse('Notice must have specific targeting criteria. No public notices allowed.', 400));
-    }
+    // All fields including targeting are now optional
+    // Backend will handle empty notices gracefully
 
     // Handle file attachments if any
     if (req.files && req.files.length > 0) {

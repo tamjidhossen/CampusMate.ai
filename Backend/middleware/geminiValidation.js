@@ -54,12 +54,14 @@ const validateGeminiNotice = (req, res, next) => {
 const validateProcessedNotice = (noticeData) => {
   const errors = [];
   
-  if (!noticeData.title || noticeData.title.length > 200) {
-    errors.push('Title is required and must not exceed 200 characters');
+  // Title validation - optional but if provided, must not exceed 200 characters
+  if (noticeData.title && noticeData.title.length > 200) {
+    errors.push('Title must not exceed 200 characters');
   }
   
-  if (!noticeData.content || noticeData.content.length > 5000) {
-    errors.push('Content is required and must not exceed 5000 characters');
+  // Content validation - optional but if provided, must not exceed 5000 characters
+  if (noticeData.content && noticeData.content.length > 5000) {
+    errors.push('Content must not exceed 5000 characters');
   }
   
   const validCategories = [
@@ -70,12 +72,13 @@ const validateProcessedNotice = (noticeData) => {
     'Health', 'Safety', 'Accommodation', 'Library', 'IT', 'Other'
   ];
   
-  if (!validCategories.includes(noticeData.category)) {
+  // Category validation - optional but if provided, must be valid
+  if (noticeData.category && !validCategories.includes(noticeData.category)) {
     errors.push('Invalid category');
   }
   
   const validPriorities = ['Low', 'Normal', 'High', 'Urgent'];
-  if (!validPriorities.includes(noticeData.priority)) {
+  if (noticeData.priority && !validPriorities.includes(noticeData.priority)) {
     errors.push('Invalid priority');
   }
   

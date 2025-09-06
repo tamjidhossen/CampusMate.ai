@@ -3,13 +3,11 @@ const mongoose = require('mongoose');
 const noticeSchema = new mongoose.Schema({
   title: {
     type: String,
-    required: [true, 'Notice title is required'],
     trim: true,
     maxlength: [200, 'Title cannot exceed 200 characters']
   },
   content: {
     type: String,
-    required: [true, 'Notice content is required'],
     maxlength: [5000, 'Content cannot exceed 5000 characters']
   },
   summary: {
@@ -18,7 +16,6 @@ const noticeSchema = new mongoose.Schema({
   },
   category: {
     type: String,
-    required: [true, 'Notice category is required'],
     enum: {
       values: [
         'Academic', 'Admission', 'Examination', 'Result', 'Events', 
