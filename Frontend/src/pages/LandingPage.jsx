@@ -1,4 +1,4 @@
-import React, { useState } from "react";
+import React, { useState, useEffect } from "react";
 import { motion, AnimatePresence } from "motion/react";
 import { useNavigate } from "react-router-dom";
 import {
@@ -11,14 +11,23 @@ import {
   X,
   Check,
 } from "lucide-react";
+import { useAuth } from "../hooks/useAuth";
 import AuthModal from "../components/AuthModal";
 import DarkVeil from "../components/DarkVeil";
 
 const LandingPage = () => {
+  const { isAuthenticated, isLoading } = useAuth();
   const [isAuthModalOpen, setIsAuthModalOpen] = useState(false);
   const [authMode, setAuthMode] = useState("login");
   const [isMenuOpen, setIsMenuOpen] = useState(false);
   const navigate = useNavigate();
+
+  // Redirect authenticated users to chat
+  useEffect(() => {
+    if (!isLoading && isAuthenticated) {
+      navigate("/chat");
+    }
+  }, [isAuthenticated, isLoading, navigate]);
 
   const openAuthModal = (mode) => {
     setAuthMode(mode);
@@ -29,6 +38,18 @@ const LandingPage = () => {
     setIsAuthModalOpen(false);
     navigate("/chat");
   };
+
+  // Show loading state while checking authentication
+  if (isLoading) {
+    return (
+      <div className="min-h-screen bg-gray-900 flex items-center justify-center">
+        <div className="text-center">
+          <div className="w-16 h-16 border-4 border-orange-600 border-t-transparent rounded-full animate-spin mx-auto mb-4"></div>
+          <p className="text-white text-lg">Loading...</p>
+        </div>
+      </div>
+    );
+  }
 
   const features = [
     {

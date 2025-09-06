@@ -1,8 +1,11 @@
 import React, { useState } from "react";
 import { motion, AnimatePresence } from "motion/react";
-import { X, Eye, EyeOff, Mail, Lock } from "lucide-react";
+import { X, Eye, EyeOff, Mail, Lock, AlertCircle, CheckCircle } from "lucide-react";
+import { toast } from "sonner";
+import { useAuth } from "../hooks/useAuth";
 
 const AuthModal = ({ isOpen, onClose, mode, onModeChange, onSuccess }) => {
+  const { login, register, isLoading } = useAuth();
   const [showPassword, setShowPassword] = useState(false);
   const [showConfirmPassword, setShowConfirmPassword] = useState(false);
   const [formData, setFormData] = useState({
@@ -10,31 +13,72 @@ const AuthModal = ({ isOpen, onClose, mode, onModeChange, onSuccess }) => {
     password: "",
     confirmPassword: "",
   });
+  const [localError, setLocalError] = useState(null);
+  const [successMessage, setSuccessMessage] = useState(null);
 
   const handleInputChange = (e) => {
     setFormData({
       ...formData,
       [e.target.name]: e.target.value,
     });
+    // Clear errors when user starts typing
+    if (localError) setLocalError(null);
   };
 
-  const handleSubmit = (e) => {
+  const handleSubmit = async (e) => {
     e.preventDefault();
+    setLocalError(null);
+    setSuccessMessage(null);
 
-    // Check if passwords match for registration
-    if (mode === "register" && formData.password !== formData.confirmPassword) {
-      alert("Passwords do not match!");
-      return;
-    }
+    try {
+      if (mode === "register") {
+        if (formData.password !== formData.confirmPassword) {
+          const errorMsg = "Passwords do not match";
+          setLocalError(errorMsg);
+          toast.error(errorMsg);
+          return;
+        }
 
-    // Handle authentication logic here
-    console.log("Form submitted:", formData);
+        const result = await register({
+          email: formData.email,
+          password: formData.password,
+        });
 
-    // Simulate successful authentication
-    if (onSuccess) {
-      onSuccess();
-    } else {
-      onClose();
+        if (result.success) {
+          setSuccessMessage(result.message);
+          toast.success(result.message);
+          setFormData({ email: "", password: "", confirmPassword: "" });
+          setTimeout(() => {
+            onModeChange("login");
+            setSuccessMessage(null);
+          }, 2000);
+        } else {
+          setLocalError(result.error);
+          toast.error(result.error);
+        }
+      } else {
+        const result = await login({
+          email: formData.email,
+          password: formData.password,
+        });
+
+        if (result.success) {
+          setFormData({ email: "", password: "", confirmPassword: "" });
+          toast.success("Login successful!");
+          if (onSuccess) {
+            onSuccess(result.user);
+          } else {
+            onClose();
+          }
+        } else {
+          setLocalError(result.error);
+          toast.error(result.error);
+        }
+      }
+    } catch {
+      const errorMsg = "An unexpected error occurred. Please try again.";
+      setLocalError(errorMsg);
+      toast.error(errorMsg);
     }
   };
 
@@ -80,6 +124,22 @@ const AuthModal = ({ isOpen, onClose, mode, onModeChange, onSuccess }) => {
             </p>
           </div>
 
+          {/* Error Message */}
+          {localError && (
+            <div className="mb-6 p-4 bg-red-900/50 border border-red-700 rounded-xl flex items-center gap-3">
+              <AlertCircle className="w-5 h-5 text-red-400 flex-shrink-0" />
+              <p className="text-red-300 text-sm">{localError}</p>
+            </div>
+          )}
+
+          {/* Success Message */}
+          {successMessage && (
+            <div className="mb-6 p-4 bg-green-900/50 border border-green-700 rounded-xl flex items-center gap-3">
+              <CheckCircle className="w-5 h-5 text-green-400 flex-shrink-0" />
+              <p className="text-green-300 text-sm">{successMessage}</p>
+            </div>
+          )}
+
           {/* Form */}
           <form onSubmit={handleSubmit} className="space-y-6">
             <div className="relative">
@@ -118,6 +178,12 @@ const AuthModal = ({ isOpen, onClose, mode, onModeChange, onSuccess }) => {
                 )}
               </button>
             </div>
+
+            {mode === "register" && (
+              <div className="text-xs text-gray-500 -mt-2 px-1">
+                Password must contain at least 6 characters with uppercase, lowercase, and number
+              </div>
+            )}
 
             {mode === "register" && (
               <div className="relative">
@@ -166,12 +232,20 @@ const AuthModal = ({ isOpen, onClose, mode, onModeChange, onSuccess }) => {
             )}
 
             <motion.button
-              whileHover={{ scale: 1.02 }}
-              whileTap={{ scale: 0.98 }}
+              whileHover={{ scale: isLoading ? 1 : 1.02 }}
+              whileTap={{ scale: isLoading ? 1 : 0.98 }}
               type="submit"
-              className="w-full bg-orange-600 hover:bg-orange-700 text-white py-3 rounded-xl font-medium transition-colors"
+              disabled={isLoading}
+              className={`w-full py-3 rounded-xl font-medium transition-colors ${
+                isLoading
+                  ? "bg-gray-600 cursor-not-allowed"
+                  : "bg-orange-600 hover:bg-orange-700"
+              } text-white`}
             >
-              {mode === "login" ? "Sign In" : "Create Account"}
+              {isLoading
+                ? (mode === "login" ? "Signing In..." : "Creating Account...")
+                : (mode === "login" ? "Sign In" : "Create Account")
+              }
             </motion.button>
           </form>
 
@@ -182,9 +256,17 @@ const AuthModal = ({ isOpen, onClose, mode, onModeChange, onSuccess }) => {
                 ? "Don't have an account? "
                 : "Already have an account? "}
               <button
-                onClick={() =>
-                  onModeChange(mode === "login" ? "register" : "login")
-                }
+                onClick={() => {
+                  // Clear form and errors when switching modes
+                  setFormData({
+                    email: "",
+                    password: "",
+                    confirmPassword: "",
+                  });
+                  setLocalError(null);
+                  setSuccessMessage(null);
+                  onModeChange(mode === "login" ? "register" : "login");
+                }}
                 className="text-orange-500 hover:text-orange-400 font-medium transition-colors"
               >
                 {mode === "login" ? "Sign up" : "Sign in"}
