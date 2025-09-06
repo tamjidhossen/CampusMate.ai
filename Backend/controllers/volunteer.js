@@ -73,8 +73,8 @@ exports.browseVolunteerRequests = asyncHandler(async (req, res, next) => {
   // Update expired requests first
   await VolunteerRequest.updateExpiredRequests();
 
-  // Only get active requests
-  const query = { status: 'Active' };
+  // Get active and fulfilled requests (show completed requests too)
+  const query = { status: { $in: ['Active', 'Fulfilled'] } };
 
   const startIndex = (parseInt(page) - 1) * parseInt(limit);
 
@@ -398,9 +398,9 @@ exports.markRequestFulfilled = asyncHandler(async (req, res, next) => {
     return next(new ErrorResponse('Not authorized to mark this request as fulfilled', 403));
   }
 
-  // Can only fulfill if request is in progress
-  if (request.status !== 'In Progress') {
-    return next(new ErrorResponse('Can only fulfill requests that are in progress', 400));
+  // Can only fulfill if request is active or in progress
+  if (request.status !== 'Active' && request.status !== 'In Progress') {
+    return next(new ErrorResponse('Can only fulfill active or in-progress requests', 400));
   }
 
   const { rating, feedback } = req.body;
