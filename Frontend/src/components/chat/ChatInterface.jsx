@@ -25,7 +25,15 @@ import { useAuth } from "../../hooks/useAuth";
 
 const ChatInterface = () => {
   const navigate = useNavigate();
-  const { logout } = useAuth();
+  const { logout, user } = useAuth();
+
+  // Helper function to get profile picture URL
+  const getUserProfilePicture = () => {
+    if (!user?.profilePicture) return null;
+    return user.profilePicture.startsWith("http")
+      ? user.profilePicture
+      : user.profilePicture; // Use the path as-is, Vite will proxy it
+  };
   const [messages, setMessages] = useState([
     {
       id: 1,
@@ -235,8 +243,16 @@ const ChatInterface = () => {
                 onClick={() => setIsProfileModalOpen(true)}
                 className="flex items-center space-x-2 cursor-pointer px-3 py-2 h-10 rounded-xl hover:bg-gray-800/60 transition-all duration-300 border border-gray-700/50 hover:border-gray-600/50"
               >
-                <div className="w-6 h-6 bg-gradient-to-br from-blue-500 to-purple-600 rounded-lg flex items-center justify-center shadow-lg">
-                  <User className="w-3 h-3 text-white" />
+                <div className="w-6 h-6 bg-gradient-to-br from-blue-500 to-purple-600 rounded-lg flex items-center justify-center shadow-lg overflow-hidden">
+                  {getUserProfilePicture() ? (
+                    <img
+                      src={getUserProfilePicture()}
+                      alt="Profile"
+                      className="w-full h-full rounded-lg object-cover"
+                    />
+                  ) : (
+                    <User className="w-3 h-3 text-white" />
+                  )}
                 </div>
                 <span className="hidden sm:block text-sm text-gray-300 font-medium">
                   Profile
@@ -361,14 +377,22 @@ const ChatInterface = () => {
                           }`}
                         >
                           <div
-                            className={`w-8 h-8 rounded-full flex items-center justify-center ${
+                            className={`w-8 h-8 rounded-full flex items-center justify-center overflow-hidden ${
                               message.type === "user"
                                 ? "bg-blue-600"
                                 : "bg-orange-600"
                             }`}
                           >
                             {message.type === "user" ? (
-                              <User className="w-4 h-4 text-white" />
+                              getUserProfilePicture() ? (
+                                <img
+                                  src={getUserProfilePicture()}
+                                  alt="User"
+                                  className="w-full h-full rounded-full object-cover"
+                                />
+                              ) : (
+                                <User className="w-4 h-4 text-white" />
+                              )
                             ) : (
                               <Bot className="w-4 h-4 text-white" />
                             )}
