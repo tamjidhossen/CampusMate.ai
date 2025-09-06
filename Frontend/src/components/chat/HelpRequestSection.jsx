@@ -239,15 +239,26 @@ const HelpRequestSection = () => {
 
   const formatTime = (timestamp) => {
     const now = new Date();
-    const diffInHours = Math.floor((now - timestamp) / (1000 * 60 * 60));
+    const time = new Date(timestamp);
+    const diffInMinutes = Math.floor((now - time) / (1000 * 60));
+    const diffInHours = Math.floor(diffInMinutes / 60);
+    const diffInDays = Math.floor(diffInHours / 24);
 
-    if (diffInHours < 1) {
-      return "Just posted";
+    if (diffInMinutes < 1) {
+      return "Just now";
+    } else if (diffInMinutes < 60) {
+      return `${diffInMinutes}m ago`;
     } else if (diffInHours < 24) {
       return `${diffInHours}h ago`;
-    } else {
-      const diffInDays = Math.floor(diffInHours / 24);
+    } else if (diffInDays < 7) {
       return `${diffInDays}d ago`;
+    } else {
+      // Show actual date for older posts
+      return time.toLocaleDateString('en-US', { 
+        month: 'short', 
+        day: 'numeric',
+        year: time.getFullYear() !== now.getFullYear() ? 'numeric' : undefined
+      });
     }
   };
 
@@ -388,138 +399,160 @@ const HelpRequestSection = () => {
                     </div>
                   </div>
                 </div>
-              <div className="flex items-center space-x-2">
-                {/* Urgency Badge */}
-                <div
-                  className={`px-2 py-1 rounded-full border text-xs font-medium ${getUrgencyColor(
-                    request.urgency
-                  )}`}
-                >
-                  {request.urgency} priority
-                </div>
-
-                {/* Status Badge */}
-                {request.status === "completed" && (
-                  <div className="flex items-center space-x-1 px-2 py-1 bg-green-500/10 border border-green-500/20 rounded-full">
-                    <CheckCircle className="w-3 h-3 text-green-400" />
-                    <span className="text-xs font-medium text-green-400">
-                      Completed
-                    </span>
-                  </div>
-                )}
-              </div>
-            </div>
-
-            {/* Request Description */}
-            <p className="text-gray-300 text-sm mb-3 leading-relaxed">
-              {request.description}
-            </p>
-
-            {/* Location */}
-            {request.location && (
-              <div className="flex items-center space-x-2 mb-4 text-sm text-gray-400">
-                <MapPin className="w-4 h-4" />
-                <span>{request.location}</span>
-              </div>
-            )}
-
-            {/* Responses */}
-            {request.responses && request.responses.length > 0 && (
-              <div className="mb-4">
-                <div className="flex items-center justify-between mb-3">
-                  <div className="flex items-center space-x-2">
-                    <MessageCircle className="w-4 h-4 text-gray-400" />
-                    <span className="text-sm text-gray-400">
-                      {request.responses.length} volunteer(s) responded
-                    </span>
-                  </div>
-                  <AvatarCircles
-                    avatarUrls={request.responses.map(r => ({
-                      url: r.volunteer?.profilePicture || r.volunteer?.profilePic,
-                      name: r.volunteer?.name
-                    }))}
-                    numPeople={request.responses.length}
-                    className="flex-shrink-0"
-                  />
-                </div>
-              </div>
-            )}
-
-            {/* Actions */}
-            <div className="flex items-center justify-between pt-4 border-t border-gray-700">
-              <div className="flex items-center space-x-2">
-                <div className="flex items-center space-x-1 text-xs text-gray-500">
-                  <MapPin className="w-3 h-3" />
-                  <span>{request.requester?.department || 'Unknown Dept'}</span>
-                </div>
-              </div>
-
-              <div className="flex items-center space-x-2">
-                {request.status === "Active" && (
-                  <>
-                    {/* Show respond button for all users except the requester */}
-                    {!(user && request.requester && (request.requester._id === user._id || request.requester.id === user.id)) && (
-                      <>
-                        {/* Check if current user has already responded */}
-                        {!request.responses?.some(r => r.volunteer?._id === user?._id || r.volunteer?.id === user?.id) ? (
-                          <motion.button
-                            whileHover={{ scale: 1.02 }}
-                            whileTap={{ scale: 0.98 }}
-                            onClick={() => handleRespondToRequest(request)}
-                            className="bg-orange-600 hover:bg-orange-700 text-white px-3 py-1.5 rounded-lg text-sm font-medium transition-colors flex items-center space-x-1"
-                          >
-                            <MessageCircle className="w-3 h-3" />
-                            <span>Respond as Volunteer</span>
-                          </motion.button>
-                        ) : (
-                          <div className="flex items-center space-x-1 text-green-400 text-sm">
-                            <CheckCircle className="w-3 h-3" />
-                            <span>You responded</span>
-                          </div>
-                        )}
-                      </>
-                    )}
-                    
-                    {/* Request owner actions */}
-                    {user && request.requester && (request.requester._id === user._id || request.requester.id === user.id) && (
-                      <>
-                        <div className="flex items-center space-x-1 text-blue-400 text-sm">
-                          <User className="w-3 h-3" />
-                          <span>Your request</span>
-                        </div>
-                        <button
-                          onClick={() => markAsCompleted(request._id || request.id)}
-                          className="text-green-400 hover:text-green-300 p-1.5 rounded-lg hover:bg-green-400/10 transition-all duration-200"
-                          title="Mark as completed"
-                        >
-                          <CheckCircle className="w-4 h-4" />
-                        </button>
-                      </>
-                    )}
-                  </>
-                )}
-                
-                {/* Show a fallback button if status is not Active for debugging */}
-                {request.status !== "Active" && (
-                  <div className="text-gray-500 text-sm">
-                    Status: {request.status}
-                  </div>
-                )}
-                
-                {/* Delete button - only for request owner */}
-                {user && request.requester && (request.requester._id === user._id || request.requester.id === user.id) && (
-                  <button
-                    onClick={() => deleteRequest(request._id || request.id)}
-                    className="text-red-400 hover:text-red-300 p-1.5 rounded-lg hover:bg-red-400/10 transition-all duration-200"
-                    title="Delete request"
+                <div className="flex items-center space-x-2">
+                  {/* Urgency Badge */}
+                  <div
+                    className={`px-2 py-1 rounded-full border text-xs font-medium ${getUrgencyColor(
+                      request.urgency
+                    )}`}
                   >
-                    <Trash2 className="w-4 h-4" />
-                  </button>
-                )}
+                    {request.urgency} priority
+                  </div>
+
+                  {/* Status Badge */}
+                  {request.status === "Fulfilled" && (
+                    <div className="flex items-center space-x-1 px-2 py-1 bg-green-500/10 border border-green-500/20 rounded-full">
+                      <CheckCircle className="w-3 h-3 text-green-400" />
+                      <span className="text-xs font-medium text-green-400">
+                        Completed
+                      </span>
+                    </div>
+                  )}
+                </div>
               </div>
-            </div>
-          </motion.div>
-        ))
+
+              {/* Request Description */}
+              <p className="text-gray-300 text-sm mb-3 leading-relaxed whitespace-pre-wrap">
+                {request.description}
+              </p>
+
+              {/* Location */}
+              {request.location && (
+                <div className="flex items-center space-x-2 mb-4 text-sm text-gray-400">
+                  <MapPin className="w-4 h-4" />
+                  <span>{request.location}</span>
+                </div>
+              )}
+
+              {/* Responses */}
+              {request.responses && request.responses.length > 0 && (
+                <div className="mb-4">
+                  <div className="flex items-center justify-between mb-3">
+                    <div className="flex items-center space-x-2">
+                      <MessageCircle className="w-4 h-4 text-gray-400" />
+                      <span className="text-sm text-gray-400">
+                        {request.responses.length} volunteer(s) responded
+                      </span>
+                    </div>
+                    <AvatarCircles
+                      avatarUrls={request.responses.map(r => ({
+                        url: r.volunteer?.profilePicture || r.volunteer?.profilePic,
+                        name: r.volunteer?.name
+                      }))}
+                      numPeople={request.responses.length}
+                      className="flex-shrink-0"
+                    />
+                  </div>
+                </div>
+              )}
+
+              {/* Actions */}
+              <div className="flex items-center justify-between pt-4 border-t border-gray-700">
+                <div className="flex items-center space-x-2">
+                  <div className="flex items-center space-x-1 text-xs text-gray-500">
+                    <MapPin className="w-3 h-3" />
+                    <span>{request.requester?.department || 'Unknown Dept'}</span>
+                  </div>
+                </div>
+
+                <div className="flex items-center space-x-2">
+                  {request.status === "Active" && (
+                    <>
+                      {/* Show respond button for all users except the requester */}
+                      {!(user && request.requester && (request.requester._id === user._id || request.requester.id === user.id)) && (
+                        <>
+                          {/* Check if current user has already responded */}
+                          {!request.responses?.some(r => r.volunteer?._id === user?._id || r.volunteer?.id === user?.id) ? (
+                            <motion.button
+                              whileHover={{ scale: 1.02 }}
+                              whileTap={{ scale: 0.98 }}
+                              onClick={() => handleRespondToRequest(request)}
+                              className="bg-orange-600 hover:bg-orange-700 text-white px-3 py-1.5 rounded-lg text-sm font-medium transition-colors flex items-center space-x-1"
+                            >
+                              <MessageCircle className="w-3 h-3" />
+                              <span>Respond as Volunteer</span>
+                            </motion.button>
+                          ) : (
+                            <div className="flex items-center space-x-1 text-green-400 text-sm">
+                              <CheckCircle className="w-3 h-3" />
+                              <span>You responded</span>
+                            </div>
+                          )}
+                        </>
+                      )}
+                      
+                      {/* Request owner actions for active requests */}
+                      {user && request.requester && (request.requester._id === user._id || request.requester.id === user.id) && (
+                        <>
+                          <div className="flex items-center space-x-1 text-blue-400 text-sm">
+                            <User className="w-3 h-3" />
+                            <span>Your request</span>
+                          </div>
+                          <button
+                            onClick={() => markAsCompleted(request._id || request.id)}
+                            className="bg-green-600 hover:bg-green-700 text-white px-3 py-1.5 rounded-lg text-sm font-medium transition-colors flex items-center space-x-1"
+                            title="Mark as completed"
+                          >
+                            <CheckCircle className="w-3 h-3" />
+                            <span>Mark Complete</span>
+                          </button>
+                        </>
+                      )}
+                    </>
+                  )}
+                  
+                  {/* Show completed status for fulfilled requests */}
+                  {request.status === "Fulfilled" && (
+                    <>
+                      {/* Show thank you message for non-requesters */}
+                      {!(user && request.requester && (request.requester._id === user._id || request.requester.id === user.id)) && (
+                        <div className="flex items-center space-x-1 text-green-400 text-sm">
+                          <CheckCircle className="w-3 h-3" />
+                          <span>Request completed</span>
+                        </div>
+                      )}
+                      
+                      {/* Show completion status for request owner */}
+                      {user && request.requester && (request.requester._id === user._id || request.requester.id === user.id) && (
+                        <div className="flex items-center space-x-1 text-green-400 text-sm bg-green-500/10 px-3 py-1.5 rounded-lg border border-green-500/20">
+                          <CheckCircle className="w-3 h-3" />
+                          <span>You marked this as completed</span>
+                        </div>
+                      )}
+                    </>
+                  )}
+                  
+                  {/* Show other status for debugging */}
+                  {request.status !== "Active" && request.status !== "Fulfilled" && (
+                    <div className="text-gray-500 text-sm">
+                      Status: {request.status}
+                    </div>
+                  )}
+                  
+                  {/* Delete button - only for request owner */}
+                  {user && request.requester && (request.requester._id === user._id || request.requester.id === user.id) && (
+                    <button
+                      onClick={() => deleteRequest(request._id || request.id)}
+                      className="text-red-400 hover:text-red-300 p-1.5 rounded-lg hover:bg-red-400/10 transition-all duration-200"
+                      title="Delete request"
+                    >
+                      <Trash2 className="w-4 h-4" />
+                    </button>
+                  )}
+                </div>
+              </div>
+            </motion.div>
+          ))
         )}
       </div>
 
