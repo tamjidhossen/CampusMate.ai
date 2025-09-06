@@ -33,19 +33,25 @@ async function makeRequest(url, options = {}, includeAuth = false) {
     const controller = new AbortController();
     const timeoutId = setTimeout(() => controller.abort(), 30000); // 30 second timeout
 
+    const defaultHeaders = {
+      "Content-Type": "application/json",
+      ...options.headers,
+    };
+
+    // Include authorization header if requested
+    if (includeAuth) {
+      const token = sessionStorage.getItem("token");
+      if (token) {
+        defaultHeaders["Authorization"] = `Bearer ${token}`;
+      }
+    }
+
     const requestOptions = {
       ...options,
       signal: controller.signal,
-      headers: {
-        "Content-Type": "application/json",
-        ...options.headers,
-      },
+      headers: defaultHeaders,
+      credentials: includeAuth ? 'include' : undefined,
     };
-
-    // Include credentials for authentication if requested
-    if (includeAuth) {
-      requestOptions.credentials = 'include';
-    }
 
     const response = await fetch(url, requestOptions);
 

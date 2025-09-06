@@ -1,4 +1,4 @@
-import React, { useState } from "react";
+import React, { useState, useEffect, useCallback } from "react";
 import { motion, AnimatePresence } from "motion/react";
 import {
   Plus,
@@ -12,164 +12,114 @@ import {
   X,
   MessageCircle,
   Trash2,
+  Loader2,
 } from "lucide-react";
+import { useAuth } from "../../hooks/useAuth";
+import * as helpRequestService from "../../services/helpRequest";
 
 const HelpRequestSection = () => {
+  const { user, isAuthenticated } = useAuth();
   const [showNewRequestForm, setShowNewRequestForm] = useState(false);
   const [showResponseModal, setShowResponseModal] = useState(false);
   const [selectedRequest, setSelectedRequest] = useState(null);
   const [newRequest, setNewRequest] = useState({
     title: "",
     description: "",
-    urgency: "medium",
-    category: "general",
+    urgency: "Medium",
+    category: "Other",
+    location: "",
   });
+  const [helpRequests, setHelpRequests] = useState([]);
+  const [isLoading, setIsLoading] = useState(true);
+  const [error, setError] = useState(null);
+  const [categories, setCategories] = useState([]);
+  const [stats, setStats] = useState(null);
 
-  // Dummy help requests data
-  const [helpRequests, setHelpRequests] = useState([
-    {
-      id: 1,
-      title: "Need O+ Blood at Medical Center",
-      description:
-        "Urgent blood donation needed for emergency surgery. Patient is in critical condition.",
-      category: "medical",
-      urgency: "high",
-      timestamp: new Date("2025-01-05T08:30:00"),
-      status: "active",
-      requester: {
-        name: "Dr. Sarah Johnson",
-        department: "Medical Department",
-        contact: "+1 (555) 123-4567",
-        email: "sarah.johnson@university.edu",
-      },
-      responses: [
-        {
-          id: 1,
-          volunteer: {
-            name: "Alex Chen",
-            department: "Computer Science",
-            profilePic:
-              "https://images.unsplash.com/photo-1472099645785-5658abf4ff4e?w=32&h=32&fit=crop&crop=face",
-            contact: "+1 (555) 987-6543",
-          },
-          timestamp: new Date("2025-01-05T09:15:00"),
-        },
-      ],
-    },
-    {
-      id: 2,
-      title: "Textbook Exchange - Calculus II",
-      description:
-        "Looking for someone to exchange Calculus II textbook (Stewart, 8th edition) for Linear Algebra textbook.",
-      category: "academic",
-      urgency: "low",
-      timestamp: new Date("2025-01-04T14:20:00"),
-      status: "active",
-      requester: {
-        name: "Michael Zhang",
-        department: "Mathematics",
-        contact: "+1 (555) 234-5678",
-        email: "michael.zhang@student.university.edu",
-      },
-      responses: [],
-    },
-    {
-      id: 3,
-      title: "Lost Keys in Library",
-      description:
-        "Lost my dorm keys somewhere in the main library. Black keychain with university logo.",
-      category: "general",
-      urgency: "medium",
-      timestamp: new Date("2025-01-03T16:45:00"),
-      status: "completed",
-      requester: {
-        name: "Emma Davis",
-        department: "Psychology",
-        contact: "+1 (555) 345-6789",
-        email: "emma.davis@student.university.edu",
-      },
-      responses: [
-        {
-          id: 1,
-          volunteer: {
-            name: "James Wilson",
-            department: "Library Staff",
-            profilePic:
-              "https://images.unsplash.com/photo-1507003211169-0a1dd7228f2d?w=32&h=32&fit=crop&crop=face",
-            contact: "+1 (555) 876-5432",
-          },
-          timestamp: new Date("2025-01-03T17:30:00"),
-        },
-      ],
-    },
-    {
-      id: 4,
-      title: "Study Group for Organic Chemistry",
-      description:
-        "Looking for 2-3 students to form a study group for CHEM 341. Planning to meet twice a week.",
-      category: "academic",
-      urgency: "low",
-      timestamp: new Date("2025-01-05T12:00:00"),
-      status: "active",
-      requester: {
-        name: "Lisa Rodriguez",
-        department: "Chemistry",
-        contact: "+1 (555) 456-7890",
-        email: "lisa.rodriguez@student.university.edu",
-      },
-      responses: [
-        {
-          id: 1,
-          volunteer: {
-            name: "David Kim",
-            department: "Chemistry",
-            profilePic:
-              "https://images.unsplash.com/photo-1500648767791-00dcc994a43e?w=32&h=32&fit=crop&crop=face",
-            contact: "+1 (555) 765-4321",
-          },
-          timestamp: new Date("2025-01-05T13:30:00"),
-        },
-        {
-          id: 2,
-          volunteer: {
-            name: "Sophie Taylor",
-            department: "Biochemistry",
-            profilePic:
-              "https://images.unsplash.com/photo-1494790108755-2616b612b212?w=32&h=32&fit=crop&crop=face",
-            contact: "+1 (555) 654-3210",
-          },
-          timestamp: new Date("2025-01-05T14:15:00"),
-        },
-      ],
-    },
-  ]);
+  // Define functions first
+  const loadHelpRequests = useCallback(async () => {
+    if (!isAuthenticated) return;
+    
+    try {
+      setIsLoading(true);
+      setError(null);
+      // Try to get all requests for volunteers, fallback to browse for regular users
+      const response = await helpRequestService.browseVolunteerRequests();
+      setHelpRequests(response.data || []);
+    } catch (err) {
+      console.error('Error loading help requests:', err);
+      setError('Failed to load help requests');
+    } finally {
+      setIsLoading(false);
+    }
+  }, [isAuthenticated]);
 
-  const handleSubmitRequest = (e) => {
+  const loadCategories = useCallback(async () => {
+    try {
+      const response = await helpRequestService.getRequestCategories();
+      setCategories(response.data || []);
+    } catch (err) {
+      console.error('Error loading categories:', err);
+      // Use default categories if API fails
+      setCategories([
+        'Blood Donation', 'Medical Emergency', 'Academic Help', 
+        'Transportation', 'Food/Supplies', 'Technical Support',
+        'Event Assistance', 'Other'
+      ]);
+    }
+  }, []);
+
+  const loadStats = useCallback(async () => {
+    try {
+      const response = await helpRequestService.getVolunteerStats();
+      setStats(response.data);
+    } catch (err) {
+      console.error('Error loading stats:', err);
+    }
+  }, []);
+
+  // Load initial data
+  useEffect(() => {
+    if (isAuthenticated) {
+      loadHelpRequests();
+      loadCategories();
+      loadStats();
+    }
+  }, [isAuthenticated, loadHelpRequests, loadCategories, loadStats]);
+
+  const handleSubmitRequest = async (e) => {
     e.preventDefault();
-    if (!newRequest.title.trim() || !newRequest.description.trim()) return;
+    if (!newRequest.title.trim() || !newRequest.description.trim() || !newRequest.location.trim()) {
+      setError('Title, description, and location are required');
+      return;
+    }
 
-    const request = {
-      id: Date.now(),
-      ...newRequest,
-      timestamp: new Date(),
-      status: "active",
-      requester: {
-        name: "Current User", // This would come from authentication
-        department: "Computer Science",
-        contact: "+1 (555) 000-0000",
-        email: "user@student.university.edu",
-      },
-      responses: [],
-    };
+    try {
+      setError(null);
+      const requestData = {
+        ...newRequest,
+        title: newRequest.title.trim(),
+        description: newRequest.description.trim(),
+        location: newRequest.location.trim(),
+      };
 
-    setHelpRequests((prev) => [...prev, request]);
-    setNewRequest({
-      title: "",
-      description: "",
-      urgency: "medium",
-      category: "general",
-    });
-    setShowNewRequestForm(false);
+      const response = await helpRequestService.createVolunteerRequest(requestData);
+      
+      if (response.success) {
+        setHelpRequests((prev) => [response.data, ...prev]);
+        setNewRequest({
+          title: "",
+          description: "",
+          urgency: "Medium",
+          category: "Other",
+          location: "",
+        });
+        setShowNewRequestForm(false);
+        await loadStats(); // Refresh stats
+      }
+    } catch (err) {
+      console.error('Error creating request:', err);
+      setError(err.message || 'Failed to create request');
+    }
   };
 
   const handleRespondToRequest = (request) => {
@@ -177,47 +127,74 @@ const HelpRequestSection = () => {
     setShowResponseModal(true);
   };
 
-  const confirmResponse = () => {
-    if (!selectedRequest) return;
+  const confirmResponse = async () => {
+    if (!selectedRequest || !user) return;
 
-    const newResponse = {
-      id: Date.now(),
-      volunteer: {
-        name: "Current User", // This would come from authentication
-        department: "Computer Science",
-        profilePic:
-          "https://images.unsplash.com/photo-1535713875002-d1d0cf377fde?w=32&h=32&fit=crop&crop=face",
-        contact: "+1 (555) 000-0000",
-      },
-      timestamp: new Date(),
-    };
-
-    setHelpRequests((prev) =>
-      prev.map((req) =>
-        req.id === selectedRequest.id
-          ? { ...req, responses: [...req.responses, newResponse] }
-          : req
-      )
-    );
-
-    setShowResponseModal(false);
-    setSelectedRequest(null);
+    try {
+      setError(null);
+      const response = await helpRequestService.respondToRequest(selectedRequest._id || selectedRequest.id);
+      
+      if (response.success) {
+        // Update local state with the new response
+        setHelpRequests((prev) =>
+          prev.map((req) =>
+            (req._id || req.id) === (selectedRequest._id || selectedRequest.id) ? response.data : req
+          )
+        );
+        setShowResponseModal(false);
+        setSelectedRequest(null);
+      }
+    } catch (err) {
+      console.error('Error responding to request:', err);
+      setError(err.message || 'Failed to respond to request');
+    }
   };
 
-  const markAsCompleted = (requestId) => {
-    setHelpRequests((prev) =>
-      prev.map((req) =>
-        req.id === requestId ? { ...req, status: "completed" } : req
-      )
-    );
+  const markAsCompleted = async (requestId) => {
+    try {
+      setError(null);
+      const response = await helpRequestService.markRequestFulfilled(requestId);
+      
+      if (response.success) {
+        setHelpRequests((prev) =>
+          prev.map((req) =>
+            (req._id || req.id) === requestId ? { ...req, status: "Fulfilled" } : req
+          )
+        );
+        await loadStats(); // Refresh stats
+      }
+    } catch (err) {
+      console.error('Error marking request as completed:', err);
+      setError(err.message || 'Failed to mark request as completed');
+    }
   };
 
-  const deleteRequest = (requestId) => {
-    setHelpRequests((prev) => prev.filter((req) => req.id !== requestId));
+  const deleteRequest = async (requestId) => {
+    try {
+      setError(null);
+      const response = await helpRequestService.deleteVolunteerRequest(requestId);
+      
+      if (response.success) {
+        setHelpRequests((prev) => prev.filter((req) => (req._id || req.id) !== requestId));
+        await loadStats(); // Refresh stats
+      }
+    } catch (err) {
+      console.error('Error deleting request:', err);
+      setError(err.message || 'Failed to delete request');
+    }
   };
 
   const getUrgencyColor = (urgency) => {
     switch (urgency) {
+      case "Critical":
+        return "text-red-400 bg-red-400/10 border-red-400/20";
+      case "High":
+        return "text-red-400 bg-red-400/10 border-red-400/20";
+      case "Medium":
+        return "text-yellow-400 bg-yellow-400/10 border-yellow-400/20";
+      case "Low":
+        return "text-green-400 bg-green-400/10 border-green-400/20";
+      // Legacy urgency levels for compatibility
       case "high":
         return "text-red-400 bg-red-400/10 border-red-400/20";
       case "medium":
@@ -231,6 +208,23 @@ const HelpRequestSection = () => {
 
   const getCategoryIcon = (category) => {
     switch (category) {
+      case "Blood Donation":
+        return "🩸";
+      case "Medical Emergency":
+        return "🏥";
+      case "Academic Help":
+        return "📚";
+      case "Transportation":
+        return "🚗";
+      case "Food/Supplies":
+        return "🍽️";
+      case "Technical Support":
+        return "💻";
+      case "Event Assistance":
+        return "🎉";
+      case "Other":
+        return "💬";
+      // Legacy categories for compatibility
       case "medical":
         return "🏥";
       case "academic":
@@ -256,10 +250,23 @@ const HelpRequestSection = () => {
     }
   };
 
-  // Sort by timestamp, newest at bottom as specified
+  // Sort by timestamp, newest first
   const sortedRequests = [...helpRequests].sort(
-    (a, b) => a.timestamp - b.timestamp
+    (a, b) => new Date(b.createdAt || b.timestamp) - new Date(a.createdAt || a.timestamp)
   );
+
+  if (!isAuthenticated) {
+    return (
+      <div className="h-full flex flex-col bg-gray-950 max-w-5xl mx-auto">
+        <div className="flex-1 flex items-center justify-center">
+          <div className="text-center">
+            <h3 className="text-lg font-medium text-white mb-2">Authentication Required</h3>
+            <p className="text-gray-400 text-sm">Please log in to access help requests.</p>
+          </div>
+        </div>
+      </div>
+    );
+  }
 
   return (
     <div className="h-full flex flex-col bg-gray-950 max-w-5xl mx-auto">
@@ -283,23 +290,33 @@ const HelpRequestSection = () => {
           </motion.button>
         </div>
 
+        {/* Error Display */}
+        {error && (
+          <div className="bg-red-500/10 border border-red-500/20 rounded-lg p-3 mb-4">
+            <div className="flex items-center space-x-2">
+              <AlertCircle className="w-4 h-4 text-red-400" />
+              <span className="text-red-400 text-sm">{error}</span>
+            </div>
+          </div>
+        )}
+
         {/* Stats */}
         <div className="grid grid-cols-3 gap-4">
           <div className="bg-gray-800/50 rounded-lg p-3 text-center">
             <div className="text-lg font-bold text-white">
-              {helpRequests.filter((r) => r.status === "active").length}
+              {stats?.activeRequests || helpRequests.filter((r) => r.status === "Active").length}
             </div>
             <div className="text-xs text-gray-400">Active Requests</div>
           </div>
           <div className="bg-gray-800/50 rounded-lg p-3 text-center">
             <div className="text-lg font-bold text-orange-400">
-              {helpRequests.reduce((sum, r) => sum + r.responses.length, 0)}
+              {stats?.totalVolunteers || helpRequests.reduce((sum, r) => sum + (r.responses?.length || 0), 0)}
             </div>
-            <div className="text-xs text-gray-400">Total Responses</div>
+            <div className="text-xs text-gray-400">Total Volunteers</div>
           </div>
           <div className="bg-gray-800/50 rounded-lg p-3 text-center">
             <div className="text-lg font-bold text-green-400">
-              {helpRequests.filter((r) => r.status === "completed").length}
+              {stats?.fulfilledRequests || helpRequests.filter((r) => r.status === "Fulfilled").length}
             </div>
             <div className="text-xs text-gray-400">Completed</div>
           </div>
@@ -314,42 +331,60 @@ const HelpRequestSection = () => {
           scrollbarColor: "#374151 transparent",
         }}
       >
-        {sortedRequests.map((request) => (
-          <motion.div
-            key={request.id}
-            initial={{ opacity: 0, y: 20 }}
-            animate={{ opacity: 1, y: 0 }}
-            className={`bg-gray-800/80 border rounded-xl p-6 transition-all duration-200 hover:border-gray-600 ${
-              request.status === "completed"
-                ? "border-green-500/30 bg-green-500/5"
-                : request.timestamp > new Date(Date.now() - 24 * 60 * 60 * 1000)
-                ? "border-orange-500/30 bg-orange-500/5"
-                : "border-gray-700"
-            }`}
-          >
-            {/* Request Header */}
-            <div className="flex items-start justify-between mb-4">
-              <div className="flex items-start space-x-3">
-                <div className="text-2xl">
-                  {getCategoryIcon(request.category)}
-                </div>
-                <div className="flex-1">
-                  <h3 className="text-lg font-semibold text-white mb-1">
-                    {request.title}
-                  </h3>
-                  <div className="flex items-center space-x-3 text-sm text-gray-400">
-                    <div className="flex items-center space-x-1">
-                      <User className="w-3 h-3" />
-                      <span>{request.requester.name}</span>
-                    </div>
-                    <div className="flex items-center space-x-1">
-                      <Clock className="w-3 h-3" />
-                      <span>{formatTime(request.timestamp)}</span>
+        {isLoading ? (
+          <div className="text-center py-12">
+            <Loader2 className="w-8 h-8 text-orange-400 animate-spin mx-auto mb-4" />
+            <h3 className="text-lg font-medium text-white mb-2">Loading Help Requests</h3>
+            <p className="text-gray-400 text-sm">Please wait while we fetch the latest requests...</p>
+          </div>
+        ) : sortedRequests.length === 0 ? (
+          <div className="text-center py-12">
+            <div className="w-16 h-16 bg-gray-700 rounded-full flex items-center justify-center mx-auto mb-4">
+              <MessageCircle className="w-8 h-8 text-gray-400" />
+            </div>
+            <h3 className="text-lg font-medium text-white mb-2">
+              No Help Requests
+            </h3>
+            <p className="text-gray-400 text-sm">
+              Be the first to post a help request!
+            </p>
+          </div>
+        ) : (
+          sortedRequests.map((request) => (
+            <motion.div
+              key={request._id || request.id}
+              initial={{ opacity: 0, y: 20 }}
+              animate={{ opacity: 1, y: 0 }}
+              className={`bg-gray-800/80 border rounded-xl p-6 transition-all duration-200 hover:border-gray-600 ${
+                request.status === "Fulfilled"
+                  ? "border-green-500/30 bg-green-500/5"
+                  : new Date(request.createdAt || request.timestamp) > new Date(Date.now() - 24 * 60 * 60 * 1000)
+                  ? "border-orange-500/30 bg-orange-500/5"
+                  : "border-gray-700"
+              }`}
+            >
+              {/* Request Header */}
+              <div className="flex items-start justify-between mb-4">
+                <div className="flex items-start space-x-3">
+                  <div className="text-2xl">
+                    {getCategoryIcon(request.category)}
+                  </div>
+                  <div className="flex-1">
+                    <h3 className="text-lg font-semibold text-white mb-1">
+                      {request.title}
+                    </h3>
+                    <div className="flex items-center space-x-3 text-sm text-gray-400">
+                      <div className="flex items-center space-x-1">
+                        <User className="w-3 h-3" />
+                        <span>{request.requester?.name || 'Unknown User'}</span>
+                      </div>
+                      <div className="flex items-center space-x-1">
+                        <Clock className="w-3 h-3" />
+                        <span>{formatTime(new Date(request.createdAt || request.timestamp))}</span>
+                      </div>
                     </div>
                   </div>
                 </div>
-              </div>
-
               <div className="flex items-center space-x-2">
                 {/* Urgency Badge */}
                 <div
@@ -373,9 +408,17 @@ const HelpRequestSection = () => {
             </div>
 
             {/* Request Description */}
-            <p className="text-gray-300 text-sm mb-4 leading-relaxed">
+            <p className="text-gray-300 text-sm mb-3 leading-relaxed">
               {request.description}
             </p>
+
+            {/* Location */}
+            {request.location && (
+              <div className="flex items-center space-x-2 mb-4 text-sm text-gray-400">
+                <MapPin className="w-4 h-4" />
+                <span>{request.location}</span>
+              </div>
+            )}
 
             {/* Responses */}
             {request.responses.length > 0 && (
@@ -414,12 +457,12 @@ const HelpRequestSection = () => {
               <div className="flex items-center space-x-2">
                 <div className="flex items-center space-x-1 text-xs text-gray-500">
                   <MapPin className="w-3 h-3" />
-                  <span>{request.requester.department}</span>
+                  <span>{request.requester?.department || 'Unknown Dept'}</span>
                 </div>
               </div>
 
               <div className="flex items-center space-x-2">
-                {request.status === "active" && (
+                {request.status === "Active" && (
                   <>
                     <motion.button
                       whileHover={{ scale: 1.02 }}
@@ -429,37 +472,28 @@ const HelpRequestSection = () => {
                     >
                       Respond to Help Request
                     </motion.button>
-                    <button
-                      onClick={() => markAsCompleted(request.id)}
-                      className="text-green-400 hover:text-green-300 p-1.5 rounded-lg hover:bg-green-400/10 transition-all duration-200"
-                    >
-                      <CheckCircle className="w-4 h-4" />
-                    </button>
+                    {user && request.requester && (request.requester._id === user._id || request.requester.id === user.id) && (
+                      <button
+                        onClick={() => markAsCompleted(request._id || request.id)}
+                        className="text-green-400 hover:text-green-300 p-1.5 rounded-lg hover:bg-green-400/10 transition-all duration-200"
+                      >
+                        <CheckCircle className="w-4 h-4" />
+                      </button>
+                    )}
                   </>
                 )}
-                <button
-                  onClick={() => deleteRequest(request.id)}
-                  className="text-red-400 hover:text-red-300 p-1.5 rounded-lg hover:bg-red-400/10 transition-all duration-200"
-                >
-                  <Trash2 className="w-4 h-4" />
-                </button>
+                {user && request.requester && (request.requester._id === user._id || request.requester.id === user.id) && (
+                  <button
+                    onClick={() => deleteRequest(request._id || request.id)}
+                    className="text-red-400 hover:text-red-300 p-1.5 rounded-lg hover:bg-red-400/10 transition-all duration-200"
+                  >
+                    <Trash2 className="w-4 h-4" />
+                  </button>
+                )}
               </div>
             </div>
           </motion.div>
-        ))}
-
-        {sortedRequests.length === 0 && (
-          <div className="text-center py-12">
-            <div className="w-16 h-16 bg-gray-700 rounded-full flex items-center justify-center mx-auto mb-4">
-              <MessageCircle className="w-8 h-8 text-gray-400" />
-            </div>
-            <h3 className="text-lg font-medium text-white mb-2">
-              No Help Requests
-            </h3>
-            <p className="text-gray-400 text-sm">
-              Be the first to post a help request!
-            </p>
-          </div>
+        ))
         )}
       </div>
 
@@ -531,6 +565,25 @@ const HelpRequestSection = () => {
                   />
                 </div>
 
+                <div>
+                  <label className="block text-sm font-medium text-gray-300 mb-2">
+                    Location
+                  </label>
+                  <input
+                    type="text"
+                    value={newRequest.location}
+                    onChange={(e) =>
+                      setNewRequest((prev) => ({
+                        ...prev,
+                        location: e.target.value,
+                      }))
+                    }
+                    placeholder="Where do you need help? (e.g., Main Library, CSE Building)"
+                    className="w-full bg-gray-900 border border-gray-600 rounded-lg px-3 py-2 text-white placeholder-gray-500 focus:outline-none focus:border-orange-500"
+                    required
+                  />
+                </div>
+
                 <div className="grid grid-cols-2 gap-4">
                   <div>
                     <label className="block text-sm font-medium text-gray-300 mb-2">
@@ -546,9 +599,11 @@ const HelpRequestSection = () => {
                       }
                       className="w-full bg-gray-900 border border-gray-600 rounded-lg px-3 py-2 text-white focus:outline-none focus:border-orange-500"
                     >
-                      <option value="general">General</option>
-                      <option value="academic">Academic</option>
-                      <option value="medical">Medical</option>
+                      {categories.map((category) => (
+                        <option key={category} value={category}>
+                          {category}
+                        </option>
+                      ))}
                     </select>
                   </div>
 
@@ -566,9 +621,10 @@ const HelpRequestSection = () => {
                       }
                       className="w-full bg-gray-900 border border-gray-600 rounded-lg px-3 py-2 text-white focus:outline-none focus:border-orange-500"
                     >
-                      <option value="low">Low</option>
-                      <option value="medium">Medium</option>
-                      <option value="high">High</option>
+                      <option value="Low">Low</option>
+                      <option value="Medium">Medium</option>
+                      <option value="High">High</option>
+                      <option value="Critical">Critical</option>
                     </select>
                   </div>
                 </div>
@@ -640,15 +696,15 @@ const HelpRequestSection = () => {
                   <div className="space-y-2 text-sm">
                     <div className="flex items-center space-x-2 text-gray-300">
                       <User className="w-4 h-4 text-gray-400" />
-                      <span>{selectedRequest.requester.name}</span>
+                      <span>{selectedRequest.requester?.name || 'Unknown User'}</span>
                     </div>
                     <div className="flex items-center space-x-2 text-gray-300">
                       <Phone className="w-4 h-4 text-gray-400" />
-                      <span>{selectedRequest.requester.contact}</span>
+                      <span>{selectedRequest.requester?.phone || selectedRequest.contactInfo?.phone || 'Not provided'}</span>
                     </div>
                     <div className="flex items-center space-x-2 text-gray-300">
                       <Mail className="w-4 h-4 text-gray-400" />
-                      <span>{selectedRequest.requester.email}</span>
+                      <span>{selectedRequest.requester?.email || selectedRequest.contactInfo?.email || 'Not provided'}</span>
                     </div>
                   </div>
                 </div>
