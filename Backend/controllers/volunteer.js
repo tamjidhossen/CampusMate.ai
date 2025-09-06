@@ -81,7 +81,8 @@ exports.browseVolunteerRequests = asyncHandler(async (req, res, next) => {
   // Execute query - minimal data for browsing
   const requests = await VolunteerRequest.find(query)
     .populate('requester', 'name department')
-    .select('title category urgency location createdAt responses')
+    .populate('responses.volunteer', 'name profilePicture')
+    .select('title description category urgency location createdAt responses status contactInfo')
     .sort({ createdAt: -1 })
     .limit(parseInt(limit))
     .skip(startIndex);

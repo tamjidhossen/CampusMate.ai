@@ -73,17 +73,18 @@ exports.register = asyncHandler(async (req, res, next) => {
     password,
     role = 'student'
   } = req.body;
-
+  
   // Create user
   const user = await User.create({
     email,
     password,
+    isVerified: true,
     role: role === 'admin' ? 'student' : role, // Prevent admin registration through API
   });
 
   res.status(201).json({
     success: true,
-    message: 'Registration successful. Please wait for admin verification.',
+    message: 'Registration successful',
     user: {
       id: user._id,
       name: user.name,
