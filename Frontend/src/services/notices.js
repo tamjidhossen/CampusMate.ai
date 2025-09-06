@@ -139,3 +139,12 @@ export async function updateNotice(noticeId, noticeData) {
 
   return response;
 }
+
+/**
+ * Get personalized notices for the current user
+ * @returns {Promise<Object>} Personalized notices
+ */
+export async function getPersonalizedNotices() {
+  const response = await makeNoticeRequest(`${BACKEND_API_URL}/api/users/notices`);
+  return response;
+}
